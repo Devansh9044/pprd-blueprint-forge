@@ -10,33 +10,191 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedBikeRouteImport } from './routes/_authenticated/bike'
+import { Route as AuthenticatedCollegeRouteImport } from './routes/_authenticated/college'
+import { Route as AuthenticatedCustomRouteImport } from './routes/_authenticated/custom'
+import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedLaptopRouteImport } from './routes/_authenticated/laptop'
+import { Route as AuthenticatedMobileRouteImport } from './routes/_authenticated/mobile'
+import { Route as AuthenticatedRechargeRouteImport } from './routes/_authenticated/recharge'
+import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticated/rewards'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedGoalsIndexRouteImport } from './routes/_authenticated/goals.index'
+import { Route as AuthenticatedGoalsGoalIdRouteImport } from './routes/_authenticated/goals.$goalId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBikeRoute = AuthenticatedBikeRouteImport.update({
+  id: '/bike',
+  path: '/bike',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCollegeRoute = AuthenticatedCollegeRouteImport.update({
+  id: '/college',
+  path: '/college',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCustomRoute = AuthenticatedCustomRouteImport.update({
+  id: '/custom',
+  path: '/custom',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLaptopRoute = AuthenticatedLaptopRouteImport.update({
+  id: '/laptop',
+  path: '/laptop',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMobileRoute = AuthenticatedMobileRouteImport.update({
+  id: '/mobile',
+  path: '/mobile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRechargeRoute = AuthenticatedRechargeRouteImport.update({
+  id: '/recharge',
+  path: '/recharge',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRewardsRoute = AuthenticatedRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGoalsIndexRoute = AuthenticatedGoalsIndexRouteImport.update({
+  id: '/goals/',
+  path: '/goals/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGoalsGoalIdRoute =
+  AuthenticatedGoalsGoalIdRouteImport.update({
+    id: '/goals/$goalId',
+    path: '/goals/$goalId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/bike': typeof AuthenticatedBikeRoute
+  '/college': typeof AuthenticatedCollegeRoute
+  '/custom': typeof AuthenticatedCustomRoute
+  '/home': typeof AuthenticatedHomeRoute
+  '/laptop': typeof AuthenticatedLaptopRoute
+  '/mobile': typeof AuthenticatedMobileRoute
+  '/recharge': typeof AuthenticatedRechargeRoute
+  '/rewards': typeof AuthenticatedRewardsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
+  '/goals/': typeof AuthenticatedGoalsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/bike': typeof AuthenticatedBikeRoute
+  '/college': typeof AuthenticatedCollegeRoute
+  '/custom': typeof AuthenticatedCustomRoute
+  '/home': typeof AuthenticatedHomeRoute
+  '/laptop': typeof AuthenticatedLaptopRoute
+  '/mobile': typeof AuthenticatedMobileRoute
+  '/recharge': typeof AuthenticatedRechargeRoute
+  '/rewards': typeof AuthenticatedRewardsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
+  '/goals': typeof AuthenticatedGoalsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/bike': typeof AuthenticatedBikeRoute
+  '/_authenticated/college': typeof AuthenticatedCollegeRoute
+  '/_authenticated/custom': typeof AuthenticatedCustomRoute
+  '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/laptop': typeof AuthenticatedLaptopRoute
+  '/_authenticated/mobile': typeof AuthenticatedMobileRoute
+  '/_authenticated/recharge': typeof AuthenticatedRechargeRoute
+  '/_authenticated/rewards': typeof AuthenticatedRewardsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
+  '/_authenticated/goals/': typeof AuthenticatedGoalsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/bike'
+    | '/college'
+    | '/custom'
+    | '/home'
+    | '/laptop'
+    | '/mobile'
+    | '/recharge'
+    | '/rewards'
+    | '/settings'
+    | '/goals/$goalId'
+    | '/goals/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/bike'
+    | '/college'
+    | '/custom'
+    | '/home'
+    | '/laptop'
+    | '/mobile'
+    | '/recharge'
+    | '/rewards'
+    | '/settings'
+    | '/goals/$goalId'
+    | '/goals'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/bike'
+    | '/_authenticated/college'
+    | '/_authenticated/custom'
+    | '/_authenticated/home'
+    | '/_authenticated/laptop'
+    | '/_authenticated/mobile'
+    | '/_authenticated/recharge'
+    | '/_authenticated/rewards'
+    | '/_authenticated/settings'
+    | '/_authenticated/goals/$goalId'
+    | '/_authenticated/goals/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +206,135 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/bike': {
+      id: '/_authenticated/bike'
+      path: '/bike'
+      fullPath: '/bike'
+      preLoaderRoute: typeof AuthenticatedBikeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/college': {
+      id: '/_authenticated/college'
+      path: '/college'
+      fullPath: '/college'
+      preLoaderRoute: typeof AuthenticatedCollegeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/custom': {
+      id: '/_authenticated/custom'
+      path: '/custom'
+      fullPath: '/custom'
+      preLoaderRoute: typeof AuthenticatedCustomRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/laptop': {
+      id: '/_authenticated/laptop'
+      path: '/laptop'
+      fullPath: '/laptop'
+      preLoaderRoute: typeof AuthenticatedLaptopRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mobile': {
+      id: '/_authenticated/mobile'
+      path: '/mobile'
+      fullPath: '/mobile'
+      preLoaderRoute: typeof AuthenticatedMobileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recharge': {
+      id: '/_authenticated/recharge'
+      path: '/recharge'
+      fullPath: '/recharge'
+      preLoaderRoute: typeof AuthenticatedRechargeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rewards': {
+      id: '/_authenticated/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof AuthenticatedRewardsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/goals/': {
+      id: '/_authenticated/goals/'
+      path: '/goals'
+      fullPath: '/goals/'
+      preLoaderRoute: typeof AuthenticatedGoalsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/goals/$goalId': {
+      id: '/_authenticated/goals/$goalId'
+      path: '/goals/$goalId'
+      fullPath: '/goals/$goalId'
+      preLoaderRoute: typeof AuthenticatedGoalsGoalIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBikeRoute: typeof AuthenticatedBikeRoute
+  AuthenticatedCollegeRoute: typeof AuthenticatedCollegeRoute
+  AuthenticatedCustomRoute: typeof AuthenticatedCustomRoute
+  AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedLaptopRoute: typeof AuthenticatedLaptopRoute
+  AuthenticatedMobileRoute: typeof AuthenticatedMobileRoute
+  AuthenticatedRechargeRoute: typeof AuthenticatedRechargeRoute
+  AuthenticatedRewardsRoute: typeof AuthenticatedRewardsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedGoalsGoalIdRoute: typeof AuthenticatedGoalsGoalIdRoute
+  AuthenticatedGoalsIndexRoute: typeof AuthenticatedGoalsIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBikeRoute: AuthenticatedBikeRoute,
+  AuthenticatedCollegeRoute: AuthenticatedCollegeRoute,
+  AuthenticatedCustomRoute: AuthenticatedCustomRoute,
+  AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedLaptopRoute: AuthenticatedLaptopRoute,
+  AuthenticatedMobileRoute: AuthenticatedMobileRoute,
+  AuthenticatedRechargeRoute: AuthenticatedRechargeRoute,
+  AuthenticatedRewardsRoute: AuthenticatedRewardsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedGoalsGoalIdRoute: AuthenticatedGoalsGoalIdRoute,
+  AuthenticatedGoalsIndexRoute: AuthenticatedGoalsIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
