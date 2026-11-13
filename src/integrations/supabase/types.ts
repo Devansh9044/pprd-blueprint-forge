@@ -14,16 +14,277 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          brand: string
+          created_at: string
+          display_daily: number | null
+          duration_days: number
+          enabled: boolean
+          extra_per_day: number
+          id: string
+          image_url: string | null
+          module: string
+          name: string
+          pending: boolean
+          price: number
+          sort: number
+          variant: string | null
+        }
+        Insert: {
+          brand: string
+          created_at?: string
+          display_daily?: number | null
+          duration_days?: number
+          enabled?: boolean
+          extra_per_day?: number
+          id?: string
+          image_url?: string | null
+          module: string
+          name: string
+          pending?: boolean
+          price: number
+          sort?: number
+          variant?: string | null
+        }
+        Update: {
+          brand?: string
+          created_at?: string
+          display_daily?: number | null
+          duration_days?: number
+          enabled?: boolean
+          extra_per_day?: number
+          id?: string
+          image_url?: string | null
+          module?: string
+          name?: string
+          pending?: boolean
+          price?: number
+          sort?: number
+          variant?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          language: string
+          mobile_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          language?: string
+          mobile_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          language?: string
+          mobile_number?: string | null
+        }
+        Relationships: []
+      }
+      rewards: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          redeemed_at: string | null
+          reward_status: string
+          reward_type: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          redeemed_at?: string | null
+          reward_status?: string
+          reward_type: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          redeemed_at?: string | null
+          reward_status?: string
+          reward_type?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saving_goals: {
+        Row: {
+          created_at: string
+          daily_saving: number
+          end_date: string | null
+          goal_amount: number
+          goal_name: string
+          id: string
+          meta: Json
+          module: string
+          product_id: string | null
+          saved_amount: number
+          start_date: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_saving: number
+          end_date?: string | null
+          goal_amount: number
+          goal_name: string
+          id?: string
+          meta?: Json
+          module: string
+          product_id?: string | null
+          saved_amount?: number
+          start_date?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_saving?: number
+          end_date?: string | null
+          goal_amount?: number
+          goal_name?: string
+          id?: string
+          meta?: Json
+          module?: string
+          product_id?: string | null
+          saved_amount?: number
+          start_date?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      streaks: {
+        Row: {
+          best: number
+          current: number
+          last_date: string | null
+          user_id: string
+        }
+        Insert: {
+          best?: number
+          current?: number
+          last_date?: string | null
+          user_id: string
+        }
+        Update: {
+          best?: number
+          current?: number
+          last_date?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          expires_at: string
+          goal_id: string
+          id: string
+          payment_provider: string
+          payment_status: string
+          provider_order_id: string
+          provider_transaction_id: string | null
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          expires_at?: string
+          goal_id: string
+          id?: string
+          payment_provider?: string
+          payment_status?: string
+          provider_order_id: string
+          provider_transaction_id?: string | null
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          expires_at?: string
+          goal_id?: string
+          id?: string
+          payment_provider?: string
+          payment_status?: string
+          provider_order_id?: string
+          provider_transaction_id?: string | null
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      confirm_demo_payment: { Args: { _order_id: string }; Returns: Json }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +411,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
