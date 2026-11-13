@@ -19,6 +19,10 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedLaptopRouteImport } from './routes/_authenticated/laptop'
 import { Route as AuthenticatedMobileRouteImport } from './routes/_authenticated/mobile'
 import { Route as AuthenticatedRechargeRouteImport } from './routes/_authenticated/recharge'
+import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticated/rewards'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedGoalsIndexRouteImport } from './routes/_authenticated/goals.index'
+import { Route as AuthenticatedGoalsGoalIdRouteImport } from './routes/_authenticated/goals.$goalId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -69,6 +73,27 @@ const AuthenticatedRechargeRoute = AuthenticatedRechargeRouteImport.update({
   path: '/recharge',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRewardsRoute = AuthenticatedRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGoalsIndexRoute = AuthenticatedGoalsIndexRouteImport.update({
+  id: '/goals/',
+  path: '/goals/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGoalsGoalIdRoute =
+  AuthenticatedGoalsGoalIdRouteImport.update({
+    id: '/goals/$goalId',
+    path: '/goals/$goalId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,6 +105,10 @@ export interface FileRoutesByFullPath {
   '/laptop': typeof AuthenticatedLaptopRoute
   '/mobile': typeof AuthenticatedMobileRoute
   '/recharge': typeof AuthenticatedRechargeRoute
+  '/rewards': typeof AuthenticatedRewardsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
+  '/goals/': typeof AuthenticatedGoalsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,6 +120,10 @@ export interface FileRoutesByTo {
   '/laptop': typeof AuthenticatedLaptopRoute
   '/mobile': typeof AuthenticatedMobileRoute
   '/recharge': typeof AuthenticatedRechargeRoute
+  '/rewards': typeof AuthenticatedRewardsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
+  '/goals': typeof AuthenticatedGoalsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,6 +137,10 @@ export interface FileRoutesById {
   '/_authenticated/laptop': typeof AuthenticatedLaptopRoute
   '/_authenticated/mobile': typeof AuthenticatedMobileRoute
   '/_authenticated/recharge': typeof AuthenticatedRechargeRoute
+  '/_authenticated/rewards': typeof AuthenticatedRewardsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
+  '/_authenticated/goals/': typeof AuthenticatedGoalsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,6 +154,10 @@ export interface FileRouteTypes {
     | '/laptop'
     | '/mobile'
     | '/recharge'
+    | '/rewards'
+    | '/settings'
+    | '/goals/$goalId'
+    | '/goals/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,6 +169,10 @@ export interface FileRouteTypes {
     | '/laptop'
     | '/mobile'
     | '/recharge'
+    | '/rewards'
+    | '/settings'
+    | '/goals/$goalId'
+    | '/goals'
   id:
     | '__root__'
     | '/'
@@ -140,6 +185,10 @@ export interface FileRouteTypes {
     | '/_authenticated/laptop'
     | '/_authenticated/mobile'
     | '/_authenticated/recharge'
+    | '/_authenticated/rewards'
+    | '/_authenticated/settings'
+    | '/_authenticated/goals/$goalId'
+    | '/_authenticated/goals/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -220,6 +269,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRechargeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rewards': {
+      id: '/_authenticated/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof AuthenticatedRewardsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/goals/': {
+      id: '/_authenticated/goals/'
+      path: '/goals'
+      fullPath: '/goals/'
+      preLoaderRoute: typeof AuthenticatedGoalsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/goals/$goalId': {
+      id: '/_authenticated/goals/$goalId'
+      path: '/goals/$goalId'
+      fullPath: '/goals/$goalId'
+      preLoaderRoute: typeof AuthenticatedGoalsGoalIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -231,6 +308,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLaptopRoute: typeof AuthenticatedLaptopRoute
   AuthenticatedMobileRoute: typeof AuthenticatedMobileRoute
   AuthenticatedRechargeRoute: typeof AuthenticatedRechargeRoute
+  AuthenticatedRewardsRoute: typeof AuthenticatedRewardsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedGoalsGoalIdRoute: typeof AuthenticatedGoalsGoalIdRoute
+  AuthenticatedGoalsIndexRoute: typeof AuthenticatedGoalsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -241,6 +322,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLaptopRoute: AuthenticatedLaptopRoute,
   AuthenticatedMobileRoute: AuthenticatedMobileRoute,
   AuthenticatedRechargeRoute: AuthenticatedRechargeRoute,
+  AuthenticatedRewardsRoute: AuthenticatedRewardsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedGoalsGoalIdRoute: AuthenticatedGoalsGoalIdRoute,
+  AuthenticatedGoalsIndexRoute: AuthenticatedGoalsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
