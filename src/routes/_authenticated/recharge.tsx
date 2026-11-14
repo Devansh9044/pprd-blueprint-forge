@@ -66,7 +66,7 @@ function RechargePage() {
       <Button disabled={!sel} onClick={go} className="mt-4 h-12 w-full rounded-xl text-base font-bold">{t("startSaving")}</Button>
       <div className="mt-6 rounded-2xl border border-dashed border-gold bg-card p-4 text-sm">
         <p className="font-bold text-accent">🎁 Recharge offer (proposed)</p>
-        <p className="mt-1 text-muted-foreground">{cfg?.offer_text}</p>
+        <p className="mt-1 text-muted-foreground">{cfg?.["offer_text"]}</p>
       </div>
     </AppShell>
   );

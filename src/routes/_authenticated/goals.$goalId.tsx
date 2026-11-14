@@ -12,7 +12,7 @@ import { inr, round2 } from "@/lib/savings";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/goals/$goalId")({
-  validateSearch: (s: Record<string, unknown>) => ({ pay: s.pay === true || s.pay === "true" }),
+  validateSearch: (s: Record<string, unknown>) => ({ pay: s["pay"] === true || s["pay"] === "true" }),
   head: () => ({ meta: [{ title: "Goal – MBA" }, { name: "description", content: "Your saving goal progress." }] }),
   component: GoalPage,
 });
@@ -37,7 +37,7 @@ function GoalPage() {
   const rows = [
     ["Daily saving", inr(Number(g.daily_saving))], ["Remaining", inr(round2(total - saved))],
     ["Started", g.start_date], ["Target date", g.end_date ?? "—"], ["Status", g.status],
-    ...((g.meta as Record<string, string>)?.mobile_number ? [["Mobile", (g.meta as Record<string, string>).mobile_number]] : []),
+    ...((g.meta as Record<string, string>)?.["mobile_number"] ? [["Mobile", (g.meta as Record<string, string>)["mobile_number"]]] : []),
   ];
   return (
     <AppShell title={g.goal_name} back>

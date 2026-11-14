@@ -1,0 +1,1 @@
+alter table public.transactions add constraint transactions_goal_id_fkey foreign key (goal_id) references public.saving_goals(id) on delete cascade;

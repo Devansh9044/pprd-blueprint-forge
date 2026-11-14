@@ -86,9 +86,9 @@ function Config() {
   if (!data) return null;
   return (
     <div className="space-y-3 rounded-2xl bg-card p-4 shadow-card text-sm">
-      <label className="block">Custom saving minimum ₹<Input defaultValue={data.custom_min} onBlur={(e) => save("custom_min", e.target.value)} /></label>
-      <label className="block">Custom saving maximum ₹<Input defaultValue={data.custom_max} onBlur={(e) => save("custom_max", e.target.value)} /></label>
-      <label className="block">Recharge offer text<Textarea rows={5} defaultValue={data.offer_text} onBlur={(e) => save("offer_text", e.target.value)} /></label>
+      <label className="block">Custom saving minimum ₹<Input defaultValue={data["custom_min"]} onBlur={(e) => save("custom_min", e.target.value)} /></label>
+      <label className="block">Custom saving maximum ₹<Input defaultValue={data["custom_max"]} onBlur={(e) => save("custom_max", e.target.value)} /></label>
+      <label className="block">Recharge offer text<Textarea rows={5} defaultValue={data["offer_text"]} onBlur={(e) => save("offer_text", e.target.value)} /></label>
     </div>
   );
 }
