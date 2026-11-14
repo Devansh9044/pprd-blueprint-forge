@@ -28,3 +28,5 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- Saving math lives in src/lib/savings.ts and is re-run server-side in src/lib/goals.functions.ts; payments credit goals only via the `confirm_demo_payment` DB function (idempotent per order) — never trust client amounts.

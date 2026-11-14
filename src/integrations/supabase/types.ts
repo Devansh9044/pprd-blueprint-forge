@@ -249,7 +249,15 @@ export type Database = {
           user_id?: string
           verified_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "saving_goals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

@@ -27,7 +27,7 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
   const confirm = async () => {
     if (!order) return;
     const { error } = await supabase.rpc("confirm_demo_payment", { _order_id: order.orderId });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setStatus("verified");
     toast.success(`${inr(order.amount)} saved!`);
     qc.invalidateQueries();

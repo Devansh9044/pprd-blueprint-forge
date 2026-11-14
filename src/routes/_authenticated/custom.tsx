@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/custom")({
 function CustomPage() {
   const { t } = useT();
   const { data: cfg } = useQuery(configQuery);
-  const min = Number(cfg?.custom_min ?? 10), max = Number(cfg?.custom_max ?? 10000);
+  const min = Number(cfg?.["custom_min"] ?? 10), max = Number(cfg?.["custom_max"] ?? 10000);
   const [name, setName] = useState("");
   const [daily, setDaily] = useState("50");
   const [target, setTarget] = useState("5000");

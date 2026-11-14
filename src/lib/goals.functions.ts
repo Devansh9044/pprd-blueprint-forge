@@ -21,7 +21,7 @@ export const createGoal = createServerFn({ method: "POST" })
       const meta: Record<string, string> = {};
       if (p.module === "recharge") {
         if (!/^[6-9]\d{9}$/.test(data.mobileNumber ?? "")) throw new Error("Enter a valid 10-digit mobile number");
-        meta.mobile_number = data.mobileNumber!;
+        meta["mobile_number"] = data.mobileNumber!;
       }
       const priced = { price: Number(p.price), duration_days: p.duration_days, extra_per_day: Number(p.extra_per_day), display_daily: p.display_daily == null ? null : Number(p.display_daily) };
       const end = new Date(Date.now() + p.duration_days * 86400000).toISOString().slice(0, 10);

@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/rewards")({
         </div>
         <div className="mt-5 rounded-2xl border border-dashed border-gold bg-card p-4 text-sm">
           <p className="font-bold text-accent">🎁 Recharge offer (proposed)</p>
-          <p className="mt-1 text-muted-foreground">{cfg?.offer_text}</p>
+          <p className="mt-1 text-muted-foreground">{cfg?.["offer_text"]}</p>
         </div>
       </AppShell>
     );
