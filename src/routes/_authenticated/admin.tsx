@@ -42,7 +42,7 @@ function Products() {
   const qc = useQueryClient();
   const { data = [] } = useQuery({ queryKey: ["admin-products", mod], queryFn: async () => (await supabase.from("products").select("*").eq("module", mod).order("sort")).data ?? [] });
   const upd = async (id: string, patch: Record<string, unknown>) => {
-    const { error } = await supabase.from("products").update(patch).eq("id", id);
+    const { error } = await supabase.from("products").update(patch as never).eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Updated"); qc.invalidateQueries(); }
   };
   const add = async () => {
