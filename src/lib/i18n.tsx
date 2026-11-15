@@ -6,6 +6,8 @@ const dict = {
   tagline: { en: "Dream Big, Save Smart, Achieve More!", hi: "बड़े सपने देखो, समझदारी से बचत करो, और जिंदगी में आगे बढ़ो!" },
   support: { en: "Your Personal Savings Partner for a Prosperous Future.", hi: "आपके सुनहरे भविष्य के लिए अपना बचत साथी।" },
   start: { en: "GET STARTED", hi: "शुरू करें" },
+  dreamLine1: { en: "Dream big…", hi: "बड़े सपने देखो…" },
+  dreamLine2: { en: "Make them happen with MBA!", hi: "MBA के साथ उन्हें पूरा करो!" },
   hello: { en: "Hello", hi: "नमस्ते" },
   totalSaving: { en: "Total Saving", hi: "कुल बचत" },
   streak: { en: "Day Streak", hi: "दिन की लय" },
