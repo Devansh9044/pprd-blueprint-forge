@@ -66,9 +66,9 @@ function GrowthChart() {
         <rect key={b.x} x={b.x} y={200 - b.h} width={38} height={b.h} rx={4} fill="url(#bar)" opacity={0.92} className="animate-bar" style={d(0.3 + i * 0.15)} />
       ))}
       <path d="M 0 192 Q 150 215 290 150" fill="none" stroke="var(--gold)" strokeWidth={3} strokeLinecap="round" pathLength={1} className="animate-draw" style={d(1.4)} opacity={0.8} />
-      <path d="M 8 196 Q 165 200 250 62" fill="none" stroke="url(#arrow)" strokeWidth={14} strokeLinecap="round" pathLength={1} className="animate-draw" style={d(1.1)} />
-      <g transform="translate(250 62) rotate(-58)">
-        <polygon points="-4,-24 34,0 -4,24" fill="var(--primary)" className="animate-pop" style={d(2.3)} />
+      <path d="M 8 196 Q 190 205 272 48" fill="none" stroke="url(#arrow)" strokeWidth={14} strokeLinecap="round" pathLength={1} className="animate-draw" style={d(1.1)} />
+      <g transform="translate(272 48) rotate(-62)">
+        <polygon points="-6,-22 30,0 -6,22" fill="var(--accent)" className="animate-pop" style={d(2.3)} />
       </g>
     </svg>
   );
@@ -103,14 +103,14 @@ function Index() {
             <path d="M 10 40 Q 60 35 100 10" fill="none" stroke="var(--accent)" strokeWidth={5} strokeLinecap="round" pathLength={1} className="animate-draw" style={d(0.5)} />
             <polygon points="92,4 112,4 104,20" fill="var(--accent)" className="animate-pop" style={d(1.2)} />
           </svg>
-          <h1 className="font-display text-6xl font-extrabold leading-none tracking-tight text-accent">MBA</h1>
+          <h1 className="font-display text-5xl font-extrabold leading-none tracking-tight text-accent">MBA</h1>
           <div className="mt-1 flex items-center gap-2 text-accent">
             <span className="h-px w-8 bg-accent" /><span className="text-sm font-bold">My Budget Assistant</span><span className="h-px w-8 bg-accent" />
           </div>
         </div>
 
         {/* Animated scene */}
-        <div className="relative mt-2 h-[38vh] min-h-56 max-h-80">
+        <div className="relative mt-2 h-[30vh] min-h-40 max-h-80">
           <Coin size={54} className="left-[6%] top-[4%]" delay={0.6} />
           <Coin size={44} className="left-[0%] top-[34%]" delay={0.8} />
           <Coin size={32} className="left-[28%] top-[24%]" delay={1} />
@@ -120,15 +120,15 @@ function Index() {
         </div>
 
         {/* Text */}
-        <div className="mt-3 flex flex-1 flex-col items-center justify-end gap-3 text-center">
-          <p className="font-display text-3xl font-extrabold italic leading-tight text-accent animate-fade-up" style={d(1.6)}>
+        <div className="mt-2 flex flex-1 flex-col items-center justify-end gap-2.5 text-center">
+          <p className="font-display text-[1.7rem] font-extrabold italic leading-[1.15] text-accent animate-fade-up" style={d(1.6)}>
             Dream Big,<br />Save Smart,<br />Achieve More!
           </p>
-          <div className="w-full rounded-2xl border border-card bg-card/60 px-4 py-2 font-semibold text-accent backdrop-blur animate-fade-up" style={d(1.9)}>
+          <div className="w-full rounded-2xl border border-card bg-card/60 px-4 py-1.5 text-sm font-semibold text-accent backdrop-blur animate-fade-up" style={d(1.9)}>
             <p>{t("dreamLine1")}</p><p>{t("dreamLine2")}</p>
           </div>
           <button onClick={go}
-            className="relative mt-1 flex h-14 w-full items-center justify-center gap-3 overflow-hidden rounded-full bg-hero text-xl font-bold text-primary-foreground shadow-card transition active:scale-95 animate-fade-up"
+            className="relative flex h-13 w-full items-center justify-center gap-3 overflow-hidden rounded-full bg-hero text-xl font-bold text-primary-foreground shadow-card transition active:scale-95 animate-fade-up"
             style={d(2.2)}>
             <span className="pointer-events-none absolute inset-0 animate-shine" />
             {t("start")} <ArrowRight className="h-6 w-6" />
