@@ -65,6 +65,12 @@ export const createDemoOrder = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("transactions").insert({ user_id: userId, goal_id: g.id, provider_order_id: orderId, amount });
     if (error) throw new Error("Could not create order");
-    const upi = `upi://pay?pa=mba.demo@upi&pn=MBA%20Savings&am=${amount.toFixed(2)}&cu=INR&tr=${orderId}&tn=${encodeURIComponent(g.goal_name)}`;
-    return { orderId, amount, upi };
+    const { data: cfg } = await supabase.from("app_config").select("key,value").in("key", ["upi_id", "upi_name"]);
+    const cfgId = cfg?.find((c) => c.key === "upi_id")?.value?.trim() ?? "";
+    const payeeId = /^[\w.-]{2,256}@[a-zA-Z][\w.-]{1,64}$/.test(cfgId) ? cfgId : "mba.demo@upi";
+    const payeeName = (cfg?.find((c) => c.key === "upi_name")?.value?.trim() || "MBA Savings").slice(0, 50);
+    const query = new URLSearchParams({
+      pa: payeeId, pn: payeeName, am: amount.toFixed(2), cu: "INR", tr: orderId, tn: `MBA ${g.goal_name}`.slice(0, 50),
+    }).toString().replace(/\+/g, "%20");
+    return { orderId, amount, query, upi: `upi://pay?${query}`, payeeId, payeeName, demo: payeeId === "mba.demo@upi" };
   });
