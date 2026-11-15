@@ -88,6 +88,8 @@ function Config() {
     <div className="space-y-3 rounded-2xl bg-card p-4 shadow-card text-sm">
       <label className="block">Custom saving minimum ₹<Input defaultValue={data["custom_min"]} onBlur={(e) => save("custom_min", e.target.value)} /></label>
       <label className="block">Custom saving maximum ₹<Input defaultValue={data["custom_max"]} onBlur={(e) => save("custom_max", e.target.value)} /></label>
+      <label className="block">Receiving UPI ID (money comes here)<Input placeholder="yourname@ybl" defaultValue={data["upi_id"]} onBlur={(e) => e.target.value !== (data["upi_id"] ?? "") && save("upi_id", e.target.value.trim())} /></label>
+      <label className="block">Name shown in UPI apps<Input placeholder="MBA Savings" defaultValue={data["upi_name"]} onBlur={(e) => e.target.value !== (data["upi_name"] ?? "") && save("upi_name", e.target.value.trim())} /></label>
       <label className="block">Recharge offer text<Textarea rows={5} defaultValue={data["offer_text"]} onBlur={(e) => save("offer_text", e.target.value)} /></label>
     </div>
   );
