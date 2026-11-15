@@ -30,3 +30,4 @@ use the editor.
 <!-- LOVABLE:END -->
 
 - Saving math lives in src/lib/savings.ts and is re-run server-side in src/lib/goals.functions.ts; payments credit goals only via the `confirm_demo_payment` DB function (idempotent per order) — never trust client amounts.
+- UPI payee (upi_id/upi_name) is read from app_config inside createDemoOrder, which returns one UPI query string; PayDialog only prefixes app-specific schemes (PhonePe, GPay, Paytm…) so amounts never come from the client.
