@@ -115,7 +115,7 @@ function Index() {
           <Coin size={44} className="left-[0%] top-[34%]" delay={0.8} />
           <Coin size={32} className="left-[28%] top-[24%]" delay={1} />
           <Coin size={24} className="left-[20%] top-[52%]" delay={1.2} />
-          <img src={plane} alt="" width={640} height={196} className="absolute right-0 top-[2%] w-[62%] animate-plane drop-shadow-xl" />
+          <img src={plane} alt="" width={640} height={196} className="absolute -top-[8%] right-0 z-10 w-[58%] animate-plane drop-shadow-xl" />
           <GrowthChart />
         </div>
 
