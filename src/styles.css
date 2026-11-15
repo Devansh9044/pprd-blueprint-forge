@@ -30,6 +30,12 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-gold: var(--gold);
   --color-success: var(--success);
+  --color-brand-phonepe: var(--brand-phonepe);
+  --color-brand-gpay: var(--brand-gpay);
+  --color-brand-paytm: var(--brand-paytm);
+  --color-brand-cred: var(--brand-cred);
+  --color-brand-bhim: var(--brand-bhim);
+  --color-brand-amazon: var(--brand-amazon);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
@@ -70,6 +76,12 @@
   --gold: oklch(0.8 0.15 80);
   --success: oklch(0.62 0.15 155);
   --destructive: oklch(0.6 0.22 25);
+  --brand-phonepe: oklch(0.42 0.2 300);
+  --brand-gpay: oklch(0.58 0.19 255);
+  --brand-paytm: oklch(0.62 0.13 225);
+  --brand-cred: oklch(0.22 0.01 260);
+  --brand-bhim: oklch(0.68 0.18 50);
+  --brand-amazon: oklch(0.72 0.17 65);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.91 0.02 235);
   --input: oklch(0.91 0.02 235);
@@ -109,3 +121,23 @@
 @utility animate-coin { animation: coin-fall 3s linear forwards; }
 @utility animate-arrow { animation: arrow-rise 2.4s ease-out .6s forwards; opacity: 0; }
 @utility animate-logo { animation: logo-in 1.2s ease-out forwards, glow 2s ease-in-out 1.2s infinite; }
+
+/* Welcome poster animation */
+@keyframes plane-in { 0% { transform: translate(-90%, 70%) scale(.55) rotate(6deg); opacity: 0; } 60% { opacity: 1; } 100% { transform: translate(0, 0) scale(1) rotate(0); opacity: 1; } }
+@keyframes plane-hover { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes pop { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes coin-bob { 0%,100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-12px) rotate(8deg); } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes drift { from { transform: scale(1.04) translateX(-1.5%); } to { transform: scale(1.04) translateX(1.5%); } }
+@keyframes shine { 0% { background-position: -150% 0; } 60%,100% { background-position: 250% 0; } }
+@utility animate-plane { animation: plane-in 1.6s cubic-bezier(.2,.8,.2,1) .9s both, plane-hover 3s ease-in-out 2.5s infinite; }
+@utility animate-bar { transform-box: fill-box; transform-origin: bottom; animation: bar-grow .7s cubic-bezier(.3,1.4,.5,1) both; }
+@utility animate-draw { stroke-dasharray: 1; animation: draw 1.3s ease-out both; }
+@utility animate-pop { transform-box: fill-box; transform-origin: center; animation: pop .45s ease-out both; }
+@utility animate-coin-bob { animation: fade-up .6s ease-out both, coin-bob 2.6s ease-in-out infinite; }
+@utility animate-fade-up { animation: fade-up .7s ease-out both; }
+@utility animate-drift { animation: drift 14s ease-in-out infinite alternate; }
+@utility animate-shine { background-image: linear-gradient(110deg, transparent 30%, color-mix(in oklab, var(--primary-foreground) 45%, transparent) 50%, transparent 70%); background-size: 200% 100%; animation: shine 3s ease-in-out 3s infinite; }
+@media (prefers-reduced-motion: reduce) { .animate-plane, .animate-bar, .animate-draw, .animate-pop, .animate-coin-bob, .animate-fade-up, .animate-drift, .animate-shine { animation: none !important; } }
