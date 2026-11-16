@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AppShell } from "@/components/mba/AppShell";
-import { goalsQuery, txQuery } from "@/components/mba/data";
+import { goalsQuery, txQuery, PAYMENT_STATUS } from "@/components/mba/data";
 import { Progress } from "@/components/ui/progress";
 import { inr } from "@/lib/savings";
 import { useT } from "@/lib/i18n";
@@ -31,8 +31,8 @@ function GoalsPage() {
             <div key={x.id} className="rounded-2xl bg-card p-3 shadow-card">
               <div className="flex justify-between"><p className="font-semibold">{x.saving_goals?.goal_name}</p><p className="font-bold text-accent">{inr(Number(x.amount))}</p></div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{x.provider_transaction_id ?? x.provider_order_id} · UPI (demo)</span>
-                <span className={x.payment_status === "verified" ? "text-success font-semibold" : ""}>{x.payment_status}</span>
+                <span>{x.utr ? `UTR ${x.utr}` : x.provider_order_id} · {x.payment_provider === "upi" ? "UPI" : "UPI (demo)"}</span>
+                <span className={x.payment_status === "verified" ? "text-success font-semibold" : x.payment_status === "rejected" ? "text-destructive font-semibold" : ""}>{PAYMENT_STATUS[x.payment_status] ?? x.payment_status}</span>
               </div>
               <p className="text-xs text-muted-foreground">{new Date(x.created_at).toLocaleString("en-IN")}</p>
             </div>
