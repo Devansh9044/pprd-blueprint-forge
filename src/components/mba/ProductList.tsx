@@ -45,7 +45,7 @@ export function ProductList({ module, filterable }: { module: string; filterable
         return (
           <div key={p.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary-soft">
-              {p.image_url ? <img src={p.image_url} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : <Icon className="h-8 w-8 text-primary" />}
+              {p.image_src ? <img src={p.image_src} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : <Icon className="h-8 w-8 text-primary" />}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-muted-foreground">{p.brand}{p.variant ? ` · ${p.variant}` : ""}</p>

@@ -220,7 +220,11 @@ export type Database = {
           payment_status: string
           provider_order_id: string
           provider_transaction_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          submitted_at: string | null
           user_id: string
+          utr: string | null
           verified_at: string | null
         }
         Insert: {
@@ -233,7 +237,11 @@ export type Database = {
           payment_status?: string
           provider_order_id: string
           provider_transaction_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_at?: string | null
           user_id: string
+          utr?: string | null
           verified_at?: string | null
         }
         Update: {
@@ -246,7 +254,11 @@ export type Database = {
           payment_status?: string
           provider_order_id?: string
           provider_transaction_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_at?: string | null
           user_id?: string
+          utr?: string | null
           verified_at?: string | null
         }
         Relationships: [
@@ -282,6 +294,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _credit_transaction: { Args: { _tx_id: string }; Returns: undefined }
+      admin_review_payment: {
+        Args: { _approve: boolean; _tx_id: string }
+        Returns: Json
+      }
       confirm_demo_payment: { Args: { _order_id: string }; Returns: Json }
       has_role: {
         Args: {
@@ -289,6 +306,11 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      real_upi_enabled: { Args: never; Returns: boolean }
+      submit_payment_utr: {
+        Args: { _order_id: string; _utr: string }
+        Returns: Json
       }
     }
     Enums: {

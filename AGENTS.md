@@ -29,5 +29,7 @@ use the editor.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
 
-- Saving math lives in src/lib/savings.ts and is re-run server-side in src/lib/goals.functions.ts; payments credit goals only via the `confirm_demo_payment` DB function (idempotent per order) — never trust client amounts.
+- Saving math lives in src/lib/savings.ts and is re-run server-side in src/lib/goals.functions.ts; goals are credited only by the internal `_credit_transaction` DB function (idempotent per order), reached through `confirm_demo_payment` (demo mode only) or `admin_review_payment` (admin approves a member-submitted UTR) — never trust client amounts.
+- Real vs demo payments is decided by `real_upi_enabled()` (a valid app_config upi_id); the demo confirm is refused whenever it is true, because UPI intent links give no automatic payment proof.
+- Product photos: image_url is either a plain link (CDN pointers in src/assets/products-cdn) or `storage:<path>` in the private product-images bucket, resolved to signed URLs by withImageSrc in data.ts, since public buckets are blocked.
 - UPI payee (upi_id/upi_name) is read from app_config inside createDemoOrder, which returns one UPI query string; PayDialog only prefixes app-specific schemes (PhonePe, GPay, Paytm…) so amounts never come from the client.

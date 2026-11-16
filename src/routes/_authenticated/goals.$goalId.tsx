@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/mba/AppShell";
 import { PayDialog } from "@/components/mba/PayDialog";
-import { goalsQuery, txQuery } from "@/components/mba/data";
+import { goalsQuery, txQuery, PAYMENT_STATUS } from "@/components/mba/data";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,9 +54,10 @@ function GoalPage() {
       {g.status !== "completed" && <Button variant="outline" onClick={togglePause} className="mt-2 w-full rounded-xl">{g.status === "paused" ? "Resume goal" : "Pause goal"}</Button>}
       <h2 className="mb-2 mt-6 text-lg font-bold text-accent">{t("history")}</h2>
       <div className="space-y-2">
-        {tx.filter((x) => x.goal_id === g.id && x.payment_status === "verified").map((x) => (
-          <div key={x.id} className="flex justify-between rounded-xl bg-card p-3 text-sm shadow-card">
-            <span>{new Date(x.verified_at!).toLocaleDateString("en-IN")}</span><b className="text-success">+{inr(Number(x.amount))}</b>
+        {tx.filter((x) => x.goal_id === g.id && ["verified", "submitted", "rejected"].includes(x.payment_status)).map((x) => (
+          <div key={x.id} className="flex items-center justify-between rounded-xl bg-card p-3 text-sm shadow-card">
+            <span>{new Date(x.verified_at ?? x.submitted_at ?? x.created_at).toLocaleDateString("en-IN")}{x.payment_status !== "verified" && <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-semibold ${x.payment_status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>{PAYMENT_STATUS[x.payment_status]}</span>}</span>
+            <b className={x.payment_status === "verified" ? "text-success" : "text-muted-foreground"}>{x.payment_status === "verified" ? "+" : ""}{inr(Number(x.amount))}</b>
           </div>
         ))}
       </div>

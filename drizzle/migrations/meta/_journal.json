@@ -15,6 +15,20 @@
       "when": 1794647437533,
       "tag": "0001_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794808686888,
+      "tag": "0002_real_upi_payments_and_product_photos",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794808880276,
+      "tag": "0003_fix_real_upi_check",
+      "breakpoints": true
     }
   ]
 }

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Download, Share2, CheckCircle2, Copy, QrCode, Smartphone, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { createDemoOrder } from "@/lib/goals.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { inr } from "@/lib/savings";
@@ -26,13 +27,15 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
   const create = useServerFn(createDemoOrder);
   const qc = useQueryClient();
   const [order, setOrder] = useState<Order | null>(null);
-  const [status, setStatus] = useState<"idle" | "pending" | "verified">("idle");
+  const [status, setStatus] = useState<"idle" | "pending" | "submitted" | "verified">("idle");
+  const [utr, setUtr] = useState("");
+  const [sending, setSending] = useState(false);
   const [tab, setTab] = useState<"apps" | "qr" | "id">("apps");
   const [opened, setOpened] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !goalId) return;
-    setOrder(null); setStatus("idle"); setTab("apps"); setOpened(null);
+    setOrder(null); setStatus("idle"); setUtr(""); setTab("apps"); setOpened(null);
     create({ data: { goalId } })
       .then(async (o) => { setOrder({ ...o, qr: await QRCode.toDataURL(o.upi, { width: 260, margin: 1 }) }); setStatus("pending"); })
       .catch((e) => { toast.error(e.message); onOpenChange(false); });
@@ -44,6 +47,17 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
     if (error) { toast.error(error.message); return; }
     setStatus("verified");
     toast.success(`${inr(order.amount)} saved!`);
+    qc.invalidateQueries();
+  };
+  const submitUtr = async () => {
+    if (!order) return;
+    const clean = utr.replace(/\s/g, "");
+    if (!/^\d{12}$/.test(clean)) { toast.error("Enter the 12-digit UPI reference number (UTR)"); return; }
+    setSending(true);
+    const { error } = await supabase.rpc("submit_payment_utr", { _order_id: order.orderId, _utr: clean });
+    setSending(false);
+    if (error) { toast.error(error.message); return; }
+    setStatus("submitted");
     qc.invalidateQueries();
   };
   const openApp = (app: (typeof UPI_APPS)[number]) => {
@@ -70,6 +84,14 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
             <CheckCircle2 className="h-16 w-16 text-success" />
             <p className="text-lg font-bold">Payment verified</p>
             <p className="text-sm text-muted-foreground">Order {order.orderId}</p>
+            <Button className="w-full" onClick={() => onOpenChange(false)}>Done</Button>
+          </div>
+        ) : status === "submitted" ? (
+          <div className="flex flex-col items-center gap-3 py-6 text-center">
+            <CheckCircle2 className="h-16 w-16 text-primary" />
+            <p className="text-lg font-bold">Payment sent for checking</p>
+            <p className="text-sm text-muted-foreground">We will match your UPI reference with the money received. {inr(order.amount)} is added to your goal once it is confirmed.</p>
+            <p className="text-xs text-muted-foreground">Order {order.orderId}</p>
             <Button className="w-full" onClick={() => onOpenChange(false)}>Done</Button>
           </div>
         ) : (
@@ -128,8 +150,19 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
             )}
 
             <p className="text-center text-[11px] text-muted-foreground">Order {order.orderId}</p>
-            {order.demo && <p className="rounded-xl bg-muted p-2 text-center text-[11px] text-muted-foreground">Demo mode — no receiving UPI ID is set yet, so no real money moves.</p>}
-            <Button className="h-12 w-full bg-success text-primary-foreground hover:bg-success/90" onClick={confirm}>Simulate payment confirmed</Button>
+            {order.demo ? (
+              <>
+                <p className="rounded-xl bg-muted p-2 text-center text-[11px] text-muted-foreground">Demo mode — no receiving UPI ID is set yet, so no real money moves.</p>
+                <Button className="h-12 w-full bg-success text-primary-foreground hover:bg-success/90" onClick={confirm}>Simulate payment confirmed</Button>
+              </>
+            ) : (
+              <div className="space-y-2 rounded-2xl border bg-card p-3">
+                <label htmlFor="utr" className="block text-sm font-bold">Paid? Enter the UPI reference number</label>
+                <p className="text-[11px] text-muted-foreground">Find the 12-digit UTR / UPI Ref No. on the success screen of your UPI app.</p>
+                <Input id="utr" inputMode="numeric" maxLength={14} placeholder="e.g. 412345678901" value={utr} onChange={(e) => setUtr(e.target.value.replace(/[^\d\s]/g, ""))} />
+                <Button className="h-12 w-full bg-success text-primary-foreground hover:bg-success/90" disabled={sending} onClick={submitUtr}>{sending ? "Sending…" : "I have paid"}</Button>
+              </div>
+            )}
           </div>
         )}
       </DialogContent>
