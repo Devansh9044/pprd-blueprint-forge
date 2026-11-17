@@ -145,6 +145,9 @@ export type Database = {
           created_at: string
           daily_saving: number
           end_date: string | null
+          fulfilled_at: string | null
+          fulfilled_by: string | null
+          fulfilled_ref: string | null
           goal_amount: number
           goal_name: string
           id: string
@@ -160,6 +163,9 @@ export type Database = {
           created_at?: string
           daily_saving: number
           end_date?: string | null
+          fulfilled_at?: string | null
+          fulfilled_by?: string | null
+          fulfilled_ref?: string | null
           goal_amount: number
           goal_name: string
           id?: string
@@ -175,6 +181,9 @@ export type Database = {
           created_at?: string
           daily_saving?: number
           end_date?: string | null
+          fulfilled_at?: string | null
+          fulfilled_by?: string | null
+          fulfilled_ref?: string | null
           goal_amount?: number
           goal_name?: string
           id?: string
@@ -295,6 +304,10 @@ export type Database = {
     }
     Functions: {
       _credit_transaction: { Args: { _tx_id: string }; Returns: undefined }
+      admin_mark_fulfilled: {
+        Args: { _goal_id: string; _ref: string }
+        Returns: undefined
+      }
       admin_review_payment: {
         Args: { _approve: boolean; _tx_id: string }
         Returns: Json
