@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Smartphone, Laptop, Bike, GraduationCap } from "lucide-react";
-import { productsQuery } from "./data";
+import { configQuery, productsQuery } from "./data";
 import { createGoal } from "@/lib/goals.functions";
 import { dailySaving, goalTotal, inr } from "@/lib/savings";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ const icons = { android: Smartphone, iphone: Smartphone, laptop: Laptop, bike: B
 
 export function ProductList({ module, filterable }: { module: string; filterable?: boolean }) {
   const { data = [], isLoading } = useQuery(productsQuery(module));
+  const { data: cfg } = useQuery(configQuery);
+  const checkedOn = cfg?.["prices_checked_on"];
   const [brand, setBrand] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const create = useServerFn(createGoal);
@@ -60,6 +62,11 @@ export function ProductList({ module, filterable }: { module: string; filterable
         );
       })}
       {!items.length && <p className="py-10 text-center text-muted-foreground">No products available right now.</p>}
+      {module !== "college" && checkedOn && (
+        <p className="px-1 text-center text-xs text-muted-foreground">
+          Prices checked on {new Date(checkedOn).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} from brand stores, Flipkart and Amazon. Shop prices can change.
+        </p>
+      )}
     </div>
   );
 }

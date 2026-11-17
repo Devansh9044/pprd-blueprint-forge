@@ -5,8 +5,8 @@ describe("saving rules", () => {
   it("laptop ₹55,000 → ₹151.68/day", () => {
     expect(dailySaving({ price: 55000, duration_days: 365, extra_per_day: 1, display_daily: null })).toBe(151.68);
   });
-  it("android uses ₹280 display override", () => {
-    expect(dailySaving({ price: 100000, duration_days: 365, extra_per_day: 0, display_daily: 280 })).toBe(280);
+  it("android phone uses real price ÷ 365 + ₹1 (Galaxy S25 Ultra ₹94,479 → ₹259.85)", () => {
+    expect(dailySaving({ price: 94479, duration_days: 365, extra_per_day: 1, display_daily: null })).toBe(259.85);
   });
   it("56-day 2GB recharge is ₹11.80/day", () => {
     expect(dailySaving({ price: 660.8, duration_days: 56, extra_per_day: 0, display_daily: 11.8 })).toBe(11.8);

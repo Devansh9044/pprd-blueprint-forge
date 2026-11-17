@@ -109,6 +109,7 @@ function Config() {
       <p className="rounded-xl bg-primary-soft p-2 text-xs">{/^[\w.-]{2,256}@[a-zA-Z][\w.-]{1,64}$/.test(data["upi_id"] ?? "") && data["upi_id"] !== "mba.demo@upi" ? "Real payments are ON. Members pay to the UPI ID below and enter their UPI reference; approve each one in Payments after you see the money in your account." : "Demo mode. Enter your real UPI ID below to start taking real money."}</p>
       <label className="block">Receiving UPI ID (money comes here)<Input placeholder="yourname@ybl" defaultValue={data["upi_id"]} onBlur={(e) => e.target.value !== (data["upi_id"] ?? "") && save("upi_id", e.target.value.trim())} /></label>
       <label className="block">Name shown in UPI apps<Input placeholder="MBA Savings" defaultValue={data["upi_name"]} onBlur={(e) => e.target.value !== (data["upi_name"] ?? "") && save("upi_name", e.target.value.trim())} /></label>
+      <label className="block">Product prices last checked on<Input type="date" defaultValue={data["prices_checked_on"]} onBlur={(e) => e.target.value && e.target.value !== (data["prices_checked_on"] ?? "") && save("prices_checked_on", e.target.value)} /></label>
       <label className="block">Recharge offer text<Textarea rows={5} defaultValue={data["offer_text"]} onBlur={(e) => save("offer_text", e.target.value)} /></label>
     </div>
   );
