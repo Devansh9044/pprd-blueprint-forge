@@ -21,12 +21,12 @@ const MODULES = ["recharge", "android", "iphone", "laptop", "bike", "college"];
 
 function AdminPage() {
   const { data: me } = useQuery(meQuery);
-  const [tab, setTab] = useState<"products" | "config" | "users" | "tx">("products");
+  const [tab, setTab] = useState<"products" | "config" | "users" | "tx" | "recharge">("products");
   if (me && !me.isAdmin) return <AppShell title="Admin"><p className="py-10 text-center text-muted-foreground">Admins only.</p></AppShell>;
   return (
     <AppShell title="Admin">
-      <div className="mb-4 grid grid-cols-4 rounded-2xl bg-card p-1 text-xs shadow-card">
-        {(["products", "config", "users", "tx"] as const).map((k) => (
+      <div className="mb-4 grid grid-cols-5 rounded-2xl bg-card p-1 text-[11px] shadow-card">
+        {(["products", "config", "users", "tx", "recharge"] as const).map((k) => (
           <button key={k} onClick={() => setTab(k)} className={`rounded-xl py-2 font-bold capitalize ${tab === k ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{k === "tx" ? "Payments" : k}</button>
         ))}
       </div>
@@ -34,6 +34,7 @@ function AdminPage() {
       {tab === "config" && <Config />}
       {tab === "users" && <Users />}
       {tab === "tx" && <Tx />}
+      {tab === "recharge" && <Recharges />}
     </AppShell>
   );
 }
@@ -110,6 +111,7 @@ function Config() {
       <label className="block">Receiving UPI ID (money comes here)<Input placeholder="yourname@ybl" defaultValue={data["upi_id"]} onBlur={(e) => e.target.value !== (data["upi_id"] ?? "") && save("upi_id", e.target.value.trim())} /></label>
       <label className="block">Name shown in UPI apps<Input placeholder="MBA Savings" defaultValue={data["upi_name"]} onBlur={(e) => e.target.value !== (data["upi_name"] ?? "") && save("upi_name", e.target.value.trim())} /></label>
       <label className="block">Product prices last checked on<Input type="date" defaultValue={data["prices_checked_on"]} onBlur={(e) => e.target.value && e.target.value !== (data["prices_checked_on"] ?? "") && save("prices_checked_on", e.target.value)} /></label>
+      <label className="block">Recharge plans last checked on<Input type="date" defaultValue={data["recharge_checked_on"]} onBlur={(e) => e.target.value && e.target.value !== (data["recharge_checked_on"] ?? "") && save("recharge_checked_on", e.target.value)} /></label>
       <label className="block">Recharge offer text<Textarea rows={5} defaultValue={data["offer_text"]} onBlur={(e) => save("offer_text", e.target.value)} /></label>
     </div>
   );
@@ -167,6 +169,63 @@ function Tx() {
         </div>
       ))}
       {!list.length && <p className="py-10 text-center text-muted-foreground">{filter === "submitted" ? "No payments waiting to be checked." : "No payments yet."}</p>}
+    </div>
+  );
+}
+
+function Recharges() {
+  const qc = useQueryClient();
+  const [show, setShow] = useState<"todo" | "done">("todo");
+  const [refs, setRefs] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const { data } = useQuery({
+    queryKey: ["admin-recharges", show],
+    queryFn: async () => {
+      let q = supabase.from("saving_goals").select("*").eq("module", "recharge").eq("status", "completed").order("created_at", { ascending: true }).limit(200);
+      q = show === "todo" ? q.is("fulfilled_at", null) : q.not("fulfilled_at", "is", null);
+      const goals = (await q).data ?? [];
+      const ids = [...new Set(goals.map((g) => g.user_id))];
+      const { data: people } = ids.length ? await supabase.from("profiles").select("id, full_name").in("id", ids) : { data: [] };
+      const byId = new Map((people ?? []).map((p) => [p.id, p]));
+      return goals.map((g) => ({ ...g, person: byId.get(g.user_id), m: (g.meta ?? {}) as Record<string, string> }));
+    },
+  });
+  const done = async (id: string) => {
+    setBusy(id);
+    const { error } = await supabase.rpc("admin_mark_fulfilled", { _goal_id: id, _ref: refs[id] ?? "" });
+    setBusy(null);
+    if (error) toast.error(error.message); else { toast.success("Marked as recharged"); qc.invalidateQueries(); }
+  };
+  const list = data ?? [];
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 rounded-2xl bg-card p-1 text-xs font-bold shadow-card">
+        {([["todo", "To recharge"], ["done", "Done"]] as const).map(([k, l]) => (
+          <button key={k} onClick={() => setShow(k)} className={`rounded-xl py-2 ${show === k ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}>{l}</button>
+        ))}
+      </div>
+      {show === "todo" && <p className="text-xs text-muted-foreground">These members have saved the full plan amount. Recharge the number from your own Jio / Airtel / Vi / BSNL or UPI app, then type the recharge reference number and tap Done.</p>}
+      {list.map((g) => (
+        <div key={g.id} className="space-y-2 rounded-xl bg-card p-3 text-sm shadow-card">
+          <div className="flex justify-between gap-2">
+            <span className="min-w-0"><b>{g.person?.full_name || "—"}</b><br /><span className="text-xs text-muted-foreground">{g.goal_name}</span></span>
+            <span className="text-right"><b>{inr(Number(g.saved_amount))}</b><br /><span className="text-xs text-muted-foreground">saved</span></span>
+          </div>
+          <div className="flex items-center justify-between rounded-lg bg-primary-soft px-3 py-2">
+            <span><span className="text-xs text-muted-foreground">{g.m["operator"] ?? "SIM"} number</span><br /><b className="font-mono text-base">{g.m["mobile_number"] ?? "—"}</b></span>
+            {g.m["mobile_number"] && <Button size="sm" variant="outline" onClick={() => { navigator.clipboard?.writeText(g.m["mobile_number"]!); toast.success("Number copied"); }}>Copy</Button>}
+          </div>
+          {show === "todo" ? (
+            <div className="flex gap-2">
+              <Input placeholder="Recharge reference no." value={refs[g.id] ?? ""} onChange={(e) => setRefs((r) => ({ ...r, [g.id]: e.target.value }))} />
+              <Button size="sm" className="shrink-0" disabled={busy === g.id || (refs[g.id] ?? "").trim().length < 4} onClick={() => done(g.id)}>Done</Button>
+            </div>
+          ) : (
+            <p className="text-xs">Recharged {g.fulfilled_at ? new Date(g.fulfilled_at).toLocaleString("en-IN") : ""} · Ref <b className="font-mono">{g.fulfilled_ref}</b></p>
+          )}
+        </div>
+      ))}
+      {!list.length && <p className="py-10 text-center text-muted-foreground">{show === "todo" ? "No recharges waiting." : "No recharges done yet."}</p>}
     </div>
   );
 }

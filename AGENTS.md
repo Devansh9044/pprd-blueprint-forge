@@ -33,3 +33,5 @@ use the editor.
 - Real vs demo payments is decided by `real_upi_enabled()` (a valid app_config upi_id); the demo confirm is refused whenever it is true, because UPI intent links give no automatic payment proof.
 - Product photos: image_url is either a plain link (CDN pointers in src/assets/products-cdn) or `storage:<path>` in the private product-images bucket, resolved to signed URLs by withImageSrc in data.ts, since public buckets are blocked.
 - UPI payee (upi_id/upi_name) is read from app_config inside createDemoOrder, which returns one UPI query string; PayDialog only prefixes app-specific schemes (PhonePe, GPay, Paytm…) so amounts never come from the client.
+- Recharge goals save exactly the plan price with daily = rechargeDaily (rounded up); completed recharge goals are fulfilled manually by an admin via `admin_mark_fulfilled` (stores fulfilled_at/ref), because there is no recharge-provider API yet.
+- Members may only update `status` (active/paused) on their own saving_goals (column grant + policy), so saved_amount/completion can only change through security-definer DB functions.

@@ -13,6 +13,11 @@ export function dailySaving(p: PricedItem): number {
   return round2(Number(p.price) / p.duration_days + Number(p.extra_per_day));
 }
 
+/** Recharge: plan price ÷ validity days, rounded UP to the paisa so the full plan price is always covered. */
+export function rechargeDaily(price: number, days: number): number {
+  return Math.ceil(Math.round(((Number(price) * 100) / days) * 1e6) / 1e6) / 100;
+}
+
 /** Total to be saved over the full duration. */
 export function goalTotal(p: PricedItem): number {
   return round2(dailySaving(p) * p.duration_days);

@@ -50,6 +50,13 @@ function GoalPage() {
       <dl className="mt-4 grid grid-cols-2 gap-2">
         {rows.map(([k, v]) => (<div key={k} className="rounded-2xl bg-card p-3 shadow-card"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-bold capitalize">{v}</dd></div>))}
       </dl>
+      {g.module === "recharge" && g.status === "completed" && (
+        <div className={`mt-4 rounded-2xl p-4 text-sm ${g.fulfilled_at ? "bg-success/10" : "bg-primary-soft"}`}>
+          {g.fulfilled_at
+            ? <>✅ Recharge done on <b>{new Date(g.fulfilled_at).toLocaleDateString("en-IN")}</b>. Reference: <b className="font-mono">{g.fulfilled_ref}</b></>
+            : <>🎉 Saving complete! We will recharge <b>{(g.meta as Record<string, string>)?.["mobile_number"]}</b> soon. You'll see the reference number here.</>}
+        </div>
+      )}
       {g.status === "active" && <Button onClick={() => setOpen(true)} className="mt-4 h-12 w-full rounded-xl text-base font-bold">{t("payToday")} · {inr(Number(g.daily_saving))}</Button>}
       {g.status !== "completed" && <Button variant="outline" onClick={togglePause} className="mt-2 w-full rounded-xl">{g.status === "paused" ? "Resume goal" : "Pause goal"}</Button>}
       <h2 className="mb-2 mt-6 text-lg font-bold text-accent">{t("history")}</h2>

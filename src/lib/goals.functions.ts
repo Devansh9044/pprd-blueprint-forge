@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { dailySaving, goalTotal, round2, validateCustomAmount } from "./savings";
+import { dailySaving, goalTotal, rechargeDaily, round2, validateCustomAmount } from "./savings";
 
 type CreateGoalInput =
   | { kind: "product"; productId: string; mobileNumber?: string }
@@ -22,13 +22,18 @@ export const createGoal = createServerFn({ method: "POST" })
       if (p.module === "recharge") {
         if (!/^[6-9]\d{9}$/.test(data.mobileNumber ?? "")) throw new Error("Enter a valid 10-digit mobile number");
         meta["mobile_number"] = data.mobileNumber!;
+        meta["operator"] = p.brand;
+        meta["plan"] = `${p.variant ?? ""} · ${p.name} · ${p.duration_days} days`;
       }
       const priced = { price: Number(p.price), duration_days: p.duration_days, extra_per_day: Number(p.extra_per_day), display_daily: p.display_daily == null ? null : Number(p.display_daily) };
       const end = new Date(Date.now() + p.duration_days * 86400000).toISOString().slice(0, 10);
       row = {
         module: p.module, product_id: p.id,
-        goal_name: p.module === "recharge" ? `${p.brand} · ${p.name} recharge` : `${p.name}${p.variant ? ` (${p.variant})` : ""}`,
-        goal_amount: goalTotal(priced), daily_saving: dailySaving(priced), end_date: end, meta,
+        goal_name: p.module === "recharge" ? `${p.brand} ${p.variant ?? ""} recharge · ${p.name} · ${p.duration_days} days` : `${p.name}${p.variant ? ` (${p.variant})` : ""}`,
+        // Recharge: save exactly the plan price; daily is price ÷ days rounded up (last payment is capped at what's left).
+        goal_amount: p.module === "recharge" ? round2(Number(p.price)) : goalTotal(priced),
+        daily_saving: p.module === "recharge" ? rechargeDaily(Number(p.price), p.duration_days) : dailySaving(priced),
+        end_date: end, meta,
       };
     } else {
       const { data: cfg } = await supabase.from("app_config").select("key,value").in("key", ["custom_min", "custom_max"]);

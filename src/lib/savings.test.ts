@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { dailySaving, goalTotal, validateCustomAmount } from "./savings";
+import { dailySaving, goalTotal, rechargeDaily, validateCustomAmount } from "./savings";
 
 describe("saving rules", () => {
   it("laptop ₹55,000 → ₹151.68/day", () => {
@@ -8,8 +8,16 @@ describe("saving rules", () => {
   it("android phone uses real price ÷ 365 + ₹1 (Galaxy S25 Ultra ₹94,479 → ₹259.85)", () => {
     expect(dailySaving({ price: 94479, duration_days: 365, extra_per_day: 1, display_daily: null })).toBe(259.85);
   });
-  it("56-day 2GB recharge is ₹11.80/day", () => {
-    expect(dailySaving({ price: 660.8, duration_days: 56, extra_per_day: 0, display_daily: 11.8 })).toBe(11.8);
+  it("recharge daily = real plan price ÷ days, rounded up (Jio ₹349 / 28 days → ₹12.47)", () => {
+    expect(rechargeDaily(349, 28)).toBe(12.47);
+    expect(rechargeDaily(299, 28)).toBe(10.68);
+    expect(rechargeDaily(3599, 365)).toBe(9.87);
+    expect(rechargeDaily(840, 28)).toBe(30);
+  });
+  it("recharge daily savings always cover the full plan price", () => {
+    for (const [price, days] of [[349, 28], [889, 84], [579, 56], [1551, 365], [347, 50]] as const) {
+      expect(rechargeDaily(price, days) * days).toBeGreaterThanOrEqual(price);
+    }
   });
   it("college ₹49 + ₹1 = ₹50/day", () => {
     expect(dailySaving({ price: 49 * 365, duration_days: 365, extra_per_day: 1, display_daily: null })).toBe(50);
