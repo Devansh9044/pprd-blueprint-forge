@@ -35,3 +35,5 @@ use the editor.
 - UPI payee (upi_id/upi_name) is read from app_config inside createDemoOrder, which returns one UPI query string; PayDialog only prefixes app-specific schemes (PhonePe, GPay, Paytm…) so amounts never come from the client.
 - Recharge goals save exactly the plan price with daily = rechargeDaily (rounded up); completed recharge goals are fulfilled manually by an admin via `admin_mark_fulfilled` (stores fulfilled_at/ref), because there is no recharge-provider API yet.
 - Members may only update `status` (active/paused) on their own saving_goals (column grant + policy), so saved_amount/completion can only change through security-definer DB functions.
+- app_config is readable by members only for an explicit whitelist of display keys (RLS policy "read member cfg"); payee/secret config (upi_id, upi_name) is read server-side with supabaseAdmin — add new member-visible keys to that policy.
+- product-images storage reads are limited to admins or objects referenced by an enabled product's `storage:<path>` image_url, so unlinked uploads stay private.

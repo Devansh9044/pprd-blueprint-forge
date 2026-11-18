@@ -36,6 +36,13 @@
       "when": 1794927322669,
       "tag": "0004_recharge_fulfilment_and_goal_lock",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795017208672,
+      "tag": "0005_restrict_config_and_product_photo_reads",
+      "breakpoints": true
     }
   ]
 }

@@ -70,7 +70,8 @@ export const createDemoOrder = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("transactions").insert({ user_id: userId, goal_id: g.id, provider_order_id: orderId, amount });
     if (error) throw new Error("Could not create order");
-    const { data: cfg } = await supabase.from("app_config").select("key,value").in("key", ["upi_id", "upi_name"]);
+    // Payee details are admin/server-only config, so read them with the server client.
+    const { data: cfg } = await supabaseAdmin.from("app_config").select("key,value").in("key", ["upi_id", "upi_name"]);
     const cfgId = cfg?.find((c) => c.key === "upi_id")?.value?.trim() ?? "";
     const payeeId = /^[\w.-]{2,256}@[a-zA-Z][\w.-]{1,64}$/.test(cfgId) ? cfgId : "mba.demo@upi";
     const payeeName = (cfg?.find((c) => c.key === "upi_name")?.value?.trim() || "MBA Savings").slice(0, 50);
