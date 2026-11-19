@@ -11,7 +11,7 @@ import { createDemoOrder } from "@/lib/goals.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { inr } from "@/lib/savings";
 
-type Order = { orderId: string; amount: number; upi: string; query: string; payeeId: string; payeeName: string; demo: boolean; qr: string };
+type Order = { orderId: string; amount: number; fee: number; saving: number; upi: string; query: string; payeeId: string; payeeName: string; demo: boolean; qr: string };
 
 /** UPI apps, each opened with its own deep link carrying the same order details. */
 export const UPI_APPS = [
@@ -46,7 +46,7 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
     const { error } = await supabase.rpc("confirm_demo_payment", { _order_id: order.orderId });
     if (error) { toast.error(error.message); return; }
     setStatus("verified");
-    toast.success(`${inr(order.amount)} saved!`);
+    toast.success(`${inr(order.saving)} saved!`);
     qc.invalidateQueries();
   };
   const submitUtr = async () => {
@@ -90,7 +90,7 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
           <div className="flex flex-col items-center gap-3 py-6 text-center">
             <CheckCircle2 className="h-16 w-16 text-primary" />
             <p className="text-lg font-bold">Payment sent for checking</p>
-            <p className="text-sm text-muted-foreground">We will match your UPI reference with the money received. {inr(order.amount)} is added to your goal once it is confirmed.</p>
+            <p className="text-sm text-muted-foreground">We will match your UPI reference with the money received. {inr(order.saving)} is added to your goal once it is confirmed.</p>
             <p className="text-xs text-muted-foreground">Order {order.orderId}</p>
             <Button className="w-full" onClick={() => onOpenChange(false)}>Done</Button>
           </div>
@@ -98,6 +98,7 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
           <div className="flex flex-col gap-3">
             <div className="rounded-2xl bg-primary-soft p-3 text-center">
               <p className="text-3xl font-extrabold text-accent">{inr(order.amount)}</p>
+              {order.fee > 0 && <p className="text-xs font-medium">{inr(order.saving)} saving + {inr(order.fee)} service fee</p>}
               <p className="text-xs text-muted-foreground">to {order.payeeName} · {order.payeeId}</p>
             </div>
 

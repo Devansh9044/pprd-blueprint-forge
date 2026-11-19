@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { inr } from "@/lib/savings";
+import { inr, DEFAULT_FEES } from "@/lib/savings";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin – MBA" }, { name: "description", content: "Manage products, prices and offers." }] }),
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 const MODULES = ["recharge", "android", "iphone", "laptop", "bike", "college"];
+const FEE_FIELDS = [["fee_recharge", "Mobile Recharge"], ["fee_mobile", "Mobile"], ["fee_laptop", "Laptop"], ["fee_bike", "Bike"], ["fee_college", "College"], ["fee_custom", "Custom"]] as const;
 
 function AdminPage() {
   const { data: me } = useQuery(meQuery);
@@ -60,7 +61,7 @@ function Products() {
     if (error) toast.error(error.message); else { toast.success("Updated"); qc.invalidateQueries(); }
   };
   const add = async () => {
-    const { error } = await supabase.from("products").insert({ module: mod, brand: "New brand", name: "New model", price: 50000, extra_per_day: mod === "bike" ? 0 : 1, duration_days: 365, sort: 99 });
+    const { error } = await supabase.from("products").insert({ module: mod, brand: "New brand", name: "New model", price: 50000, duration_days: 365, sort: 99 });
     if (error) toast.error(error.message); else qc.invalidateQueries();
   };
   return (
@@ -78,10 +79,10 @@ function Products() {
             <Switch checked={p.enabled} onCheckedChange={(v) => upd(p.id, { enabled: v })} />
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
-            {([["brand", "Brand"], ["variant", "Variant"], ["price", "Price ₹"], ["extra_per_day", "Extra ₹/day"], ["duration_days", "Days"], ["display_daily", "Display ₹/day (opt)"], ["image_url", "Photo link (or tap the photo to upload)"]] as const).map(([k, l]) => (
+            {([["brand", "Brand"], ["variant", "Variant"], ["price", "Price ₹"], ["duration_days", "Days"], ["display_daily", "Display ₹/day (opt)"], ["image_url", "Photo link (or tap the photo to upload)"]] as const).map(([k, l]) => (
               <label key={k} className={k === "image_url" ? "col-span-2" : ""}>{l}
                 <Input key={String(p[k] ?? "")} defaultValue={(p[k] as string | number | null) ?? ""} onBlur={(e) => {
-                  const v = e.target.value; const num = ["price", "extra_per_day", "duration_days", "display_daily"].includes(k);
+                  const v = e.target.value; const num = ["price", "duration_days", "display_daily"].includes(k);
                   const val = v === "" ? null : num ? Number(v) : v;
                   if (String(val ?? "") !== String(p[k] ?? "")) upd(p.id, { [k]: val });
                 }} />
@@ -105,6 +106,19 @@ function Config() {
   if (!data) return null;
   return (
     <div className="space-y-3 rounded-2xl bg-card p-4 shadow-card text-sm">
+      <div className="space-y-2 rounded-xl border p-3">
+        <p className="font-bold text-accent">Extra charge per daily payment (your profit)</p>
+        <p className="text-xs text-muted-foreground">Members pay this on top of their daily saving. It is not added to their goal. Changes apply to new goals only.</p>
+        <div className="grid grid-cols-2 gap-2">
+          {FEE_FIELDS.map(([key, label]) => (
+            <label key={key} className="block text-xs">{label} ₹<Input inputMode="decimal" defaultValue={data[key] ?? String(DEFAULT_FEES[key])} onBlur={(e) => {
+              const v = e.target.value.trim();
+              if (!/^\d{1,2}(\.\d{1,2})?$/.test(v)) { toast.error("Enter an amount like 0.90"); return; }
+              if (v !== (data[key] ?? "")) save(key, v);
+            }} /></label>
+          ))}
+        </div>
+      </div>
       <label className="block">Custom saving minimum ₹<Input defaultValue={data["custom_min"]} onBlur={(e) => save("custom_min", e.target.value)} /></label>
       <label className="block">Custom saving maximum ₹<Input defaultValue={data["custom_max"]} onBlur={(e) => save("custom_max", e.target.value)} /></label>
       <p className="rounded-xl bg-primary-soft p-2 text-xs">{/^[\w.-]{2,256}@[a-zA-Z][\w.-]{1,64}$/.test(data["upi_id"] ?? "") && data["upi_id"] !== "mba.demo@upi" ? "Real payments are ON. Members pay to the UPI ID below and enter their UPI reference; approve each one in Payments after you see the money in your account." : "Demo mode. Enter your real UPI ID below to start taking real money."}</p>
@@ -145,8 +159,22 @@ function Tx() {
     if (error) toast.error(error.message); else { toast.success(approve ? "Approved — added to the goal" : "Rejected"); qc.invalidateQueries(); }
   };
   const list = data ?? [];
+  const { data: profit } = useQuery({ queryKey: ["admin-profit"], queryFn: async () => {
+    const { data, error } = await supabase.rpc("admin_profit_summary");
+    if (error) throw error; return data as { today: number; month: number; total: number; payments: number };
+  } });
   return (
     <div className="space-y-2">
+      {profit && (
+        <div className="rounded-2xl bg-hero p-4 text-primary-foreground">
+          <p className="text-xs opacity-80">Your profit from extra charges (confirmed payments)</p>
+          <div className="mt-1 grid grid-cols-3 gap-2 text-center">
+            {([["Today", profit.today], ["This month", profit.month], ["All time", profit.total]] as const).map(([l, v]) => (
+              <div key={l}><p className="text-lg font-extrabold">{inr(Number(v))}</p><p className="text-[11px] opacity-80">{l}</p></div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 rounded-2xl bg-card p-1 text-xs font-bold shadow-card">
         {([["submitted", "To check"], ["all", "All payments"]] as const).map(([k, l]) => (
           <button key={k} onClick={() => setFilter(k)} className={`rounded-xl py-2 ${filter === k ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}>{l}</button>
@@ -157,7 +185,7 @@ function Tx() {
         <div key={x.id} className="space-y-2 rounded-xl bg-card p-3 text-sm shadow-card">
           <div className="flex justify-between gap-2">
             <span className="min-w-0"><b>{x.person?.full_name || "—"}</b> <span className="text-xs text-muted-foreground">{x.person?.mobile_number}</span><br /><span className="text-xs text-muted-foreground">{x.saving_goals?.goal_name} · {new Date(x.submitted_at ?? x.created_at).toLocaleString("en-IN")}</span></span>
-            <span className="text-right"><b>{inr(Number(x.amount))}</b><br /><span className="text-xs">{PAYMENT_STATUS[x.payment_status] ?? x.payment_status}</span></span>
+            <span className="text-right"><b>{inr(Number(x.amount))}</b>{Number(x.fee) > 0 && <span className="block text-[11px] text-success">profit {inr(Number(x.fee))}</span>}<span className="text-xs">{PAYMENT_STATUS[x.payment_status] ?? x.payment_status}</span></span>
           </div>
           <p className="text-xs">UTR <b className="font-mono">{x.utr ?? "—"}</b> · <span className="text-muted-foreground">{x.provider_order_id}</span></p>
           {x.payment_status === "submitted" && (
@@ -197,8 +225,22 @@ function Recharges() {
     if (error) toast.error(error.message); else { toast.success("Marked as recharged"); qc.invalidateQueries(); }
   };
   const list = data ?? [];
+  const { data: profit } = useQuery({ queryKey: ["admin-profit"], queryFn: async () => {
+    const { data, error } = await supabase.rpc("admin_profit_summary");
+    if (error) throw error; return data as { today: number; month: number; total: number; payments: number };
+  } });
   return (
     <div className="space-y-2">
+      {profit && (
+        <div className="rounded-2xl bg-hero p-4 text-primary-foreground">
+          <p className="text-xs opacity-80">Your profit from extra charges (confirmed payments)</p>
+          <div className="mt-1 grid grid-cols-3 gap-2 text-center">
+            {([["Today", profit.today], ["This month", profit.month], ["All time", profit.total]] as const).map(([l, v]) => (
+              <div key={l}><p className="text-lg font-extrabold">{inr(Number(v))}</p><p className="text-[11px] opacity-80">{l}</p></div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 rounded-2xl bg-card p-1 text-xs font-bold shadow-card">
         {([["todo", "To recharge"], ["done", "Done"]] as const).map(([k, l]) => (
           <button key={k} onClick={() => setShow(k)} className={`rounded-xl py-2 ${show === k ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}>{l}</button>

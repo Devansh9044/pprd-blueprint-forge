@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Smartphone, Laptop, Bike, GraduationCap } from "lucide-react";
 import { configQuery, productsQuery } from "./data";
 import { createGoal } from "@/lib/goals.functions";
-import { dailySaving, goalTotal, inr } from "@/lib/savings";
+import { inr, moduleFee, productDaily, round2 } from "@/lib/savings";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 
@@ -43,7 +43,8 @@ export function ProductList({ module, filterable }: { module: string; filterable
         </div>
       )}
       {items.map((p) => {
-        const priced = { price: Number(p.price), duration_days: p.duration_days, extra_per_day: Number(p.extra_per_day), display_daily: p.display_daily == null ? null : Number(p.display_daily) };
+        const daily = productDaily({ price: Number(p.price), duration_days: p.duration_days, display_daily: p.display_daily == null ? null : Number(p.display_daily) });
+        const fee = moduleFee(module, cfg);
         return (
           <div key={p.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary-soft">
@@ -52,10 +53,11 @@ export function ProductList({ module, filterable }: { module: string; filterable
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-muted-foreground">{p.brand}{p.variant ? ` · ${p.variant}` : ""}</p>
               <p className="font-bold leading-tight">{p.name}</p>
-              <p className="text-xs text-muted-foreground">{module === "college" ? `${inr(goalTotal(priced))} in ${p.duration_days} days` : `${inr(Number(p.price))} · ${p.duration_days} days`}</p>
+              <p className="text-xs text-muted-foreground">{module === "college" ? `${inr(Number(p.price))} in ${p.duration_days} days` : `${inr(Number(p.price))} · ${p.duration_days} days`}</p>
             </div>
             <div className="text-right">
-              <p className="text-lg font-extrabold text-accent">{inr(dailySaving(priced))}<span className="text-xs font-medium text-muted-foreground">{t("perDay")}</span></p>
+              <p className="text-lg font-extrabold text-accent">{inr(round2(daily + fee))}<span className="text-xs font-medium text-muted-foreground">{t("perDay")}</span></p>
+              {fee > 0 && <p className="text-[10px] text-muted-foreground">{inr(daily)} saving + {inr(fee)} fee</p>}
               <Button size="sm" disabled={busy === p.id} onClick={() => start(p.id)} className="mt-1 rounded-full">{t("startSaving")}</Button>
             </div>
           </div>

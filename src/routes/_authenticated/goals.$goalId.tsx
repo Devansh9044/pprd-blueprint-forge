@@ -30,12 +30,14 @@ function GoalPage() {
   if (!g) return <AppShell title="Goal" back><p className="py-10 text-center text-muted-foreground">Goal not found.</p></AppShell>;
   const saved = Number(g.saved_amount), total = Number(g.goal_amount);
   const pct = Math.min(100, (saved / total) * 100);
+  const fee = Number(g.fee_per_day ?? 0);
+  const today = round2(Math.min(Number(g.daily_saving), round2(total - saved)) + fee);
   const togglePause = async () => {
     const { error } = await supabase.from("saving_goals").update({ status: g.status === "paused" ? "active" : "paused" }).eq("id", g.id);
     if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["goals"] });
   };
   const rows = [
-    ["Daily saving", inr(Number(g.daily_saving))], ["Remaining", inr(round2(total - saved))],
+    ["Daily saving", inr(Number(g.daily_saving))], ...(fee > 0 ? [["Service fee / day", inr(fee)]] : []), ["Remaining", inr(round2(total - saved))],
     ["Started", g.start_date], ["Target date", g.end_date ?? "—"], ["Status", g.status],
     ...((g.meta as Record<string, string>)?.["mobile_number"] ? [["Mobile", (g.meta as Record<string, string>)["mobile_number"]]] : []),
   ];
@@ -57,14 +59,14 @@ function GoalPage() {
             : <>🎉 Saving complete! We will recharge <b>{(g.meta as Record<string, string>)?.["mobile_number"]}</b> soon. You'll see the reference number here.</>}
         </div>
       )}
-      {g.status === "active" && <Button onClick={() => setOpen(true)} className="mt-4 h-12 w-full rounded-xl text-base font-bold">{t("payToday")} · {inr(Number(g.daily_saving))}</Button>}
+      {g.status === "active" && <Button onClick={() => setOpen(true)} className="mt-4 h-12 w-full rounded-xl text-base font-bold">{t("payToday")} · {inr(today)}</Button>}
       {g.status !== "completed" && <Button variant="outline" onClick={togglePause} className="mt-2 w-full rounded-xl">{g.status === "paused" ? "Resume goal" : "Pause goal"}</Button>}
       <h2 className="mb-2 mt-6 text-lg font-bold text-accent">{t("history")}</h2>
       <div className="space-y-2">
         {tx.filter((x) => x.goal_id === g.id && ["verified", "submitted", "rejected"].includes(x.payment_status)).map((x) => (
           <div key={x.id} className="flex items-center justify-between rounded-xl bg-card p-3 text-sm shadow-card">
             <span>{new Date(x.verified_at ?? x.submitted_at ?? x.created_at).toLocaleDateString("en-IN")}{x.payment_status !== "verified" && <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-semibold ${x.payment_status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>{PAYMENT_STATUS[x.payment_status]}</span>}</span>
-            <b className={x.payment_status === "verified" ? "text-success" : "text-muted-foreground"}>{x.payment_status === "verified" ? "+" : ""}{inr(Number(x.amount))}</b>
+            <b className={x.payment_status === "verified" ? "text-success" : "text-muted-foreground"}>{x.payment_status === "verified" ? "+" : ""}{inr(round2(Number(x.amount) - Number(x.fee ?? 0)))}</b>
           </div>
         ))}
       </div>

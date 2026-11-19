@@ -46,7 +46,7 @@ function GoalsPage() {
             return (
               <Link key={g.id} to="/goals/$goalId" params={{ goalId: g.id }} search={{ pay: false }} className="block rounded-2xl bg-card p-4 shadow-card">
                 <div className="flex justify-between"><p className="font-bold">{g.goal_name}</p><span className="text-xs capitalize text-muted-foreground">{g.status}</span></div>
-                <p className="text-sm text-muted-foreground">{inr(Number(g.saved_amount))} of {inr(Number(g.goal_amount))} · {inr(Number(g.daily_saving))}{t("perDay")}</p>
+                <p className="text-sm text-muted-foreground">{inr(Number(g.saved_amount))} of {inr(Number(g.goal_amount))} · {inr(Number(g.daily_saving) + Number(g.fee_per_day ?? 0))}{t("perDay")}</p>
                 <Progress value={pct} className="mt-2 h-2" />
               </Link>
             );

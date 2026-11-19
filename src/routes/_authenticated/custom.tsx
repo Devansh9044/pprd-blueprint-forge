@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/mba/AppShell";
 import { configQuery } from "@/components/mba/data";
 import { createGoal } from "@/lib/goals.functions";
-import { validateCustomAmount, inr } from "@/lib/savings";
+import { validateCustomAmount, inr, moduleFee, round2 } from "@/lib/savings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,7 @@ function CustomPage() {
   const create = useServerFn(createGoal);
   const nav = useNavigate();
   const err = validateCustomAmount(daily, min, max);
+  const fee = moduleFee("custom", cfg);
   const go = async () => {
     try { const g = await create({ data: { kind: "custom", name, target, daily } }); nav({ to: "/goals/$goalId", params: { goalId: g.id }, search: { pay: true } }); }
     catch (e) { toast.error((e as Error).message); }
@@ -45,6 +46,7 @@ function CustomPage() {
           </div>
           <Input inputMode="decimal" value={daily} onChange={(e) => setDaily(e.target.value)} />
           <p className={`text-xs ${err ? "text-destructive" : "text-muted-foreground"}`}>{err ?? `Allowed ${inr(min)} – ${inr(max)}`}</p>
+          {!err && fee > 0 && <p className="rounded-xl bg-primary-soft p-2 text-sm">You pay <b>{inr(round2(Number(daily) + fee))}</b> a day: {inr(Number(daily))} saving + {inr(fee)} fee.</p>}
         </div>
         <Button disabled={!!err} onClick={go} className="h-12 w-full rounded-xl text-base font-bold">Generate QR</Button>
       </div>

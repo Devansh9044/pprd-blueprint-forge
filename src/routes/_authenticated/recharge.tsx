@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/mba/AppShell";
 import { configQuery, meQuery, productsQuery } from "@/components/mba/data";
 import { createGoal } from "@/lib/goals.functions";
-import { inr, rechargeDaily } from "@/lib/savings";
+import { inr, moduleFee, rechargeDaily, round2 } from "@/lib/savings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
@@ -47,6 +47,7 @@ function RechargePage() {
   const sel = plans.find((p) => p.id === pid);
   const num = mobile || me?.profile?.mobile_number || "";
   const checkedOn = cfg?.["recharge_checked_on"];
+  const fee = moduleFee("recharge", cfg);
 
   const go = async () => {
     if (!sel) return;
@@ -77,7 +78,7 @@ function RechargePage() {
           <button key={p.id} onClick={() => setPid(p.id)} className={`rounded-2xl border p-3 text-left ${pid === p.id ? "border-primary ring-2 ring-primary" : "bg-card"}`}>
             <p className="text-lg font-extrabold">{inr(Number(p.price))}</p>
             <p className="text-xs font-semibold text-muted-foreground">{p.name}</p>
-            <p className="mt-1 text-base font-extrabold text-accent">{inr(rechargeDaily(Number(p.price), p.duration_days))}<span className="text-xs font-medium text-muted-foreground">{t("perDay")}</span></p>
+            <p className="mt-1 text-base font-extrabold text-accent">{inr(round2(rechargeDaily(Number(p.price), p.duration_days) + fee))}<span className="text-xs font-medium text-muted-foreground">{t("perDay")}</span></p>
           </button>
         ))}
         {!plans.length && <p className="col-span-2 py-6 text-center text-sm text-muted-foreground">No plans for {op} right now.</p>}
@@ -86,7 +87,7 @@ function RechargePage() {
       <Input inputMode="numeric" maxLength={10} placeholder="10-digit number" value={num} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))} />
       {sel && (
         <div className="mt-5 rounded-2xl bg-primary-soft p-4 text-sm">
-          Save <b>{inr(rechargeDaily(Number(sel.price), sel.duration_days))}</b> daily for {sel.duration_days} days → <b>{inr(Number(sel.price))}</b> for your {op} {sel.name} recharge. When your saving is full, we recharge <b>{num || "your number"}</b> for you.
+          Pay <b>{inr(round2(rechargeDaily(Number(sel.price), sel.duration_days) + fee))}</b> daily ({inr(rechargeDaily(Number(sel.price), sel.duration_days))} saving + {inr(fee)} fee) for {sel.duration_days} days → <b>{inr(Number(sel.price))}</b> for your {op} {sel.name} recharge. When your saving is full, we recharge <b>{num || "your number"}</b> for you.
         </div>
       )}
       <Button disabled={!sel || busy} onClick={go} className="mt-4 h-12 w-full rounded-xl text-base font-bold">{t("startSaving")}</Button>

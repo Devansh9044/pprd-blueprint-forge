@@ -145,6 +145,7 @@ export type Database = {
           created_at: string
           daily_saving: number
           end_date: string | null
+          fee_per_day: number
           fulfilled_at: string | null
           fulfilled_by: string | null
           fulfilled_ref: string | null
@@ -163,6 +164,7 @@ export type Database = {
           created_at?: string
           daily_saving: number
           end_date?: string | null
+          fee_per_day?: number
           fulfilled_at?: string | null
           fulfilled_by?: string | null
           fulfilled_ref?: string | null
@@ -181,6 +183,7 @@ export type Database = {
           created_at?: string
           daily_saving?: number
           end_date?: string | null
+          fee_per_day?: number
           fulfilled_at?: string | null
           fulfilled_by?: string | null
           fulfilled_ref?: string | null
@@ -223,6 +226,7 @@ export type Database = {
           amount: number
           created_at: string
           expires_at: string
+          fee: number
           goal_id: string
           id: string
           payment_provider: string
@@ -240,6 +244,7 @@ export type Database = {
           amount: number
           created_at?: string
           expires_at?: string
+          fee?: number
           goal_id: string
           id?: string
           payment_provider?: string
@@ -257,6 +262,7 @@ export type Database = {
           amount?: number
           created_at?: string
           expires_at?: string
+          fee?: number
           goal_id?: string
           id?: string
           payment_provider?: string
@@ -308,6 +314,7 @@ export type Database = {
         Args: { _goal_id: string; _ref: string }
         Returns: undefined
       }
+      admin_profit_summary: { Args: never; Returns: Json }
       admin_review_payment: {
         Args: { _approve: boolean; _tx_id: string }
         Returns: Json

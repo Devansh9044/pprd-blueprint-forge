@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { dailySaving, goalTotal, rechargeDaily, round2, validateCustomAmount } from "./savings";
+import { FEE_KEYS, moduleFee, paymentFor, productDaily, round2, validateCustomAmount } from "./savings";
 
 type CreateGoalInput =
   | { kind: "product"; productId: string; mobileNumber?: string }
@@ -13,8 +13,12 @@ export const createGoal = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     let row: {
       module: string; product_id: string | null; goal_name: string; goal_amount: number;
-      daily_saving: number; end_date: string; meta: Record<string, string>;
+      daily_saving: number; fee_per_day: number; end_date: string; meta: Record<string, string>;
     };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Owner's extra charge per module is admin config; read it server-side so the client can't change it.
+    const { data: feeCfg } = await supabaseAdmin.from("app_config").select("key,value").in("key", [...new Set(Object.values(FEE_KEYS))]);
+    const fees = Object.fromEntries((feeCfg ?? []).map((c) => [c.key, c.value]));
     if (data.kind === "product") {
       const { data: p, error } = await supabase.from("products").select("*").eq("id", data.productId).eq("enabled", true).single();
       if (error || !p) throw new Error("Product not available");
@@ -25,14 +29,15 @@ export const createGoal = createServerFn({ method: "POST" })
         meta["operator"] = p.brand;
         meta["plan"] = `${p.variant ?? ""} · ${p.name} · ${p.duration_days} days`;
       }
-      const priced = { price: Number(p.price), duration_days: p.duration_days, extra_per_day: Number(p.extra_per_day), display_daily: p.display_daily == null ? null : Number(p.display_daily) };
+      const priced = { price: Number(p.price), duration_days: p.duration_days, display_daily: p.display_daily == null ? null : Number(p.display_daily) };
       const end = new Date(Date.now() + p.duration_days * 86400000).toISOString().slice(0, 10);
       row = {
         module: p.module, product_id: p.id,
         goal_name: p.module === "recharge" ? `${p.brand} ${p.variant ?? ""} recharge · ${p.name} · ${p.duration_days} days` : `${p.name}${p.variant ? ` (${p.variant})` : ""}`,
-        // Recharge: save exactly the plan price; daily is price ÷ days rounded up (last payment is capped at what's left).
-        goal_amount: p.module === "recharge" ? round2(Number(p.price)) : goalTotal(priced),
-        daily_saving: p.module === "recharge" ? rechargeDaily(Number(p.price), p.duration_days) : dailySaving(priced),
+        // Save exactly the price; daily is price ÷ days rounded up (last payment is capped at what's left).
+        goal_amount: round2(Number(p.price)),
+        daily_saving: productDaily(priced),
+        fee_per_day: moduleFee(p.module, fees),
         end_date: end, meta,
       };
     } else {
@@ -47,10 +52,9 @@ export const createGoal = createServerFn({ method: "POST" })
       const days = Math.ceil(target / Number(data.daily));
       row = {
         module: "custom", product_id: null, goal_name: name, goal_amount: round2(target),
-        daily_saving: round2(Number(data.daily)), end_date: new Date(Date.now() + days * 86400000).toISOString().slice(0, 10), meta: {},
+        daily_saving: round2(Number(data.daily)), fee_per_day: moduleFee("custom", fees), end_date: new Date(Date.now() + days * 86400000).toISOString().slice(0, 10), meta: {},
       };
     }
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: g, error } = await supabaseAdmin.from("saving_goals").insert({ ...row, user_id: userId }).select("id").single();
     if (error) throw new Error("Could not create goal");
     return { id: g.id };
@@ -65,10 +69,11 @@ export const createDemoOrder = createServerFn({ method: "POST" })
     if (!g) throw new Error("Goal not found");
     if (g.status !== "active") throw new Error("This goal is not active");
     const remaining = round2(Number(g.goal_amount) - Number(g.saved_amount));
-    const amount = Math.min(Number(g.daily_saving), remaining);
+    // Member pays the saving part + the owner's fee; only the saving part is credited to the goal.
+    const { amount, fee, saving } = paymentFor(Number(g.daily_saving), Number(g.fee_per_day ?? 0), remaining);
     const orderId = "MBA" + Date.now() + Math.random().toString(36).slice(2, 8).toUpperCase();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("transactions").insert({ user_id: userId, goal_id: g.id, provider_order_id: orderId, amount });
+    const { error } = await supabaseAdmin.from("transactions").insert({ user_id: userId, goal_id: g.id, provider_order_id: orderId, amount, fee });
     if (error) throw new Error("Could not create order");
     // Payee details are admin/server-only config, so read them with the server client.
     const { data: cfg } = await supabaseAdmin.from("app_config").select("key,value").in("key", ["upi_id", "upi_name"]);
@@ -78,5 +83,5 @@ export const createDemoOrder = createServerFn({ method: "POST" })
     const query = new URLSearchParams({
       pa: payeeId, pn: payeeName, am: amount.toFixed(2), cu: "INR", tr: orderId, tn: `MBA ${g.goal_name}`.slice(0, 50),
     }).toString().replace(/\+/g, "%20");
-    return { orderId, amount, query, upi: `upi://pay?${query}`, payeeId, payeeName, demo: payeeId === "mba.demo@upi" };
+    return { orderId, amount, fee, saving, query, upi: `upi://pay?${query}`, payeeId, payeeName, demo: payeeId === "mba.demo@upi" };
   });
