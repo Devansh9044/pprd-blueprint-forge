@@ -28,6 +28,18 @@ const dict = {
   language: { en: "Language", hi: "भाषा" },
   signOut: { en: "Sign out", hi: "साइन आउट" },
   history: { en: "History", hi: "इतिहास" },
+  skip: { en: "Skip", hi: "छोड़ें" },
+  welcomeBack: { en: "Welcome back", hi: "वापसी पर स्वागत है" },
+  createAccount: { en: "Create account", hi: "खाता बनाएँ" },
+  fullName: { en: "Full name", hi: "पूरा नाम" },
+  mobileNumber: { en: "Mobile number", hi: "मोबाइल नंबर" },
+  email: { en: "Email", hi: "ईमेल" },
+  password: { en: "Password", hi: "पासवर्ड" },
+  signIn: { en: "Sign in", hi: "साइन इन" },
+  signUp: { en: "Sign up", hi: "साइन अप" },
+  newToMba: { en: "New to MBA? Create an account", hi: "MBA में नए हैं? खाता बनाएँ" },
+  haveAccount: { en: "Already have an account? Sign in", hi: "पहले से खाता है? साइन इन करें" },
+  saveProfile: { en: "Save profile", hi: "प्रोफ़ाइल सेव करें" },
 } as const;
 export type Key = keyof typeof dict;
 
@@ -41,6 +53,8 @@ export function LangProvider({ children }: { children: ReactNode }) {
     const s = localStorage.getItem("mba-lang");
     if (s === "hi" || s === "en") setLangState(s);
   }, []);
+  // Screen reader / font ke liye <html lang> bhi bhasha ke saath badle.
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
   const setLang = (l: Lang) => { setLangState(l); localStorage.setItem("mba-lang", l); };
   return <Ctx.Provider value={{ lang, setLang, t: (k) => dict[k][lang] }}>{children}</Ctx.Provider>;
 }
