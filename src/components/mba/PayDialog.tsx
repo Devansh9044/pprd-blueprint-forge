@@ -35,15 +35,19 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
 
   useEffect(() => {
     if (!open || !goalId) return;
+    let cancelled = false; // dialog band/dobara khula to purana jawab state overwrite na kare
     setOrder(null); setStatus("idle"); setUtr(""); setTab("apps"); setOpened(null);
     create({ data: { goalId } })
-      .then(async (o) => { setOrder({ ...o, qr: await QRCode.toDataURL(o.upi, { width: 260, margin: 1 }) }); setStatus("pending"); })
-      .catch((e) => { toast.error(e.message); onOpenChange(false); });
+      .then(async (o) => { const qr = await QRCode.toDataURL(o.upi, { width: 260, margin: 1 }); if (cancelled) return; setOrder({ ...o, qr }); setStatus("pending"); })
+      .catch((e) => { if (cancelled) return; toast.error(e.message); onOpenChange(false); });
+    return () => { cancelled = true; };
   }, [open, goalId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const confirm = async () => {
-    if (!order) return;
+    if (!order || sending) return;
+    setSending(true);
     const { error } = await supabase.rpc("confirm_demo_payment", { _order_id: order.orderId });
+    setSending(false);
     if (error) { toast.error(error.message); return; }
     setStatus("verified");
     toast.success(`${inr(order.saving)} saved!`);
@@ -154,7 +158,7 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
             {order.demo ? (
               <>
                 <p className="rounded-xl bg-muted p-2 text-center text-[11px] text-muted-foreground">Demo mode — no receiving UPI ID is set yet, so no real money moves.</p>
-                <Button className="h-12 w-full bg-success text-primary-foreground hover:bg-success/90" onClick={confirm}>Simulate payment confirmed</Button>
+                <Button className="h-12 w-full bg-success text-primary-foreground hover:bg-success/90" disabled={sending} onClick={confirm}>Simulate payment confirmed</Button>
               </>
             ) : (
               <div className="space-y-2 rounded-2xl border bg-card p-3">
@@ -169,4 +173,4 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
       </DialogContent>
     </Dialog>
   );
-}
+                                               }
