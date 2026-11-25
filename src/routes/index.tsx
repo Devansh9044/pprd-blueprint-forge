@@ -24,6 +24,7 @@ export const Route = createFileRoute("/")({
 const d = (s: number): CSSProperties => ({ animationDelay: `${s}s` });
 
 function Splash({ onDone }: { onDone: () => void }) {
+  const { t } = useT();
   const done = useRef(onDone);
   done.current = onDone;
   useEffect(() => { const t = setTimeout(() => done.current(), 3400); return () => clearTimeout(t); }, []);
@@ -35,7 +36,7 @@ function Splash({ onDone }: { onDone: () => void }) {
       ))}
       <TrendingUp className="absolute animate-arrow h-40 w-40 text-accent" strokeWidth={2.5} />
       <img src={logo} alt="MBA" width={1024} height={1024} className="relative h-48 w-48 animate-logo" />
-      <button onClick={onDone} className="absolute bottom-8 right-6 text-sm text-muted-foreground underline">Skip</button>
+      <button onClick={onDone} className="absolute bottom-8 right-6 text-sm text-muted-foreground underline">{t("skip")}</button>
     </div>
   );
 }
@@ -122,7 +123,7 @@ function Index() {
         {/* Text */}
         <div className="mt-2 flex flex-1 flex-col items-center justify-end gap-2.5 text-center">
           <p className="font-display text-[1.7rem] font-extrabold italic leading-[1.15] text-accent animate-fade-up" style={d(1.6)}>
-            Dream Big,<br />Save Smart,<br />Achieve More!
+            {lang === "hi" ? t("tagline") : <>Dream Big,<br />Save Smart,<br />Achieve More!</>}
           </p>
           <div className="w-full rounded-2xl border border-card bg-card/60 px-4 py-1.5 text-sm font-semibold text-accent backdrop-blur animate-fade-up" style={d(1.9)}>
             <p>{t("dreamLine1")}</p><p>{t("dreamLine2")}</p>
