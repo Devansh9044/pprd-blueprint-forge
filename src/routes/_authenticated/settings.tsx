@@ -23,7 +23,11 @@ function SettingsPage() {
   const [f, setF] = useState({ full_name: "", mobile_number: "" });
   useEffect(() => { if (me?.profile) setF({ full_name: me.profile.full_name ?? "", mobile_number: me.profile.mobile_number ?? "" }); }, [me?.profile]);
   const save = async () => {
-    const { error } = await supabase.from("profiles").update(f).eq("id", me!.id);
+    if (!me) return;
+    const full_name = f.full_name.trim();
+    if (!full_name) { toast.error("Enter your name"); return; }
+    if (!/^[6-9]\d{9}$/.test(f.mobile_number)) { toast.error("Enter a valid 10-digit mobile number"); return; }
+    const { error } = await supabase.from("profiles").update({ full_name, mobile_number: f.mobile_number }).eq("id", me.id);
     if (error) toast.error(error.message); else { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["me"] }); }
   };
   const out = async () => { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); nav({ to: "/auth", replace: true }); };
@@ -39,9 +43,9 @@ function SettingsPage() {
       </div>
       <div className="mt-4 space-y-3 rounded-3xl bg-card p-5 shadow-card">
         <p className="text-sm text-muted-foreground">{me?.email}</p>
-        <div className="space-y-1"><Label>Full name</Label><Input value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} /></div>
-        <div className="space-y-1"><Label>Mobile number</Label><Input maxLength={10} value={f.mobile_number} onChange={(e) => setF({ ...f, mobile_number: e.target.value.replace(/\D/g, "") })} /></div>
-        <Button onClick={save} className="w-full">Save profile</Button>
+        <div className="space-y-1"><Label>{t("fullName")}</Label><Input value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} /></div>
+        <div className="space-y-1"><Label>{t("mobileNumber")}</Label><Input maxLength={10} value={f.mobile_number} onChange={(e) => setF({ ...f, mobile_number: e.target.value.replace(/\D/g, "") })} /></div>
+        <Button onClick={save} className="w-full">{t("saveProfile")}</Button>
       </div>
       <Button variant="outline" onClick={out} className="mt-4 w-full">{t("signOut")}</Button>
     </AppShell>
