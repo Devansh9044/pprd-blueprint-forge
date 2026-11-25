@@ -24,19 +24,24 @@ function CustomPage() {
   const [name, setName] = useState("");
   const [daily, setDaily] = useState("50");
   const [target, setTarget] = useState("5000");
+  const [busy, setBusy] = useState(false);
   const create = useServerFn(createGoal);
   const nav = useNavigate();
   const err = validateCustomAmount(daily, min, max);
+  const targetNum = Number(target);
+  const targetErr = !Number.isFinite(targetNum) || targetNum < Number(daily) || targetNum > 10000000 ? "Enter a valid target amount" : null;
   const fee = moduleFee("custom", cfg);
   const go = async () => {
+    if (busy) return;
+    setBusy(true);
     try { const g = await create({ data: { kind: "custom", name, target, daily } }); nav({ to: "/goals/$goalId", params: { goalId: g.id }, search: { pay: true } }); }
-    catch (e) { toast.error((e as Error).message); }
+    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   return (
     <AppShell title={t("custom")} back>
       <div className="space-y-4 rounded-3xl bg-card p-5 shadow-card">
         <div className="space-y-1"><Label>Goal name</Label><Input placeholder="e.g. Trip to Goa" value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div className="space-y-1"><Label>Target amount (₹)</Label><Input inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} /></div>
+        <div className="space-y-1"><Label>Target amount (₹)</Label><Input inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} />{targetErr && <p className="text-xs text-destructive">{targetErr}</p>}</div>
         <div className="space-y-2">
           <Label>Daily amount</Label>
           <div className="grid grid-cols-4 gap-2">
@@ -48,7 +53,7 @@ function CustomPage() {
           <p className={`text-xs ${err ? "text-destructive" : "text-muted-foreground"}`}>{err ?? `Allowed ${inr(min)} – ${inr(max)}`}</p>
           {!err && fee > 0 && <p className="rounded-xl bg-primary-soft p-2 text-sm">You pay <b>{inr(round2(Number(daily) + fee))}</b> a day: {inr(Number(daily))} saving + {inr(fee)} fee.</p>}
         </div>
-        <Button disabled={!!err} onClick={go} className="h-12 w-full rounded-xl text-base font-bold">Generate QR</Button>
+        <Button disabled={!!err || !!targetErr || busy} onClick={go} className="h-12 w-full rounded-xl text-base font-bold">Generate QR</Button>
       </div>
     </AppShell>
   );
