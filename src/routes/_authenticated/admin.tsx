@@ -23,7 +23,8 @@ const FEE_FIELDS = [["fee_recharge", "Mobile Recharge"], ["fee_mobile", "Mobile"
 function AdminPage() {
   const { data: me } = useQuery(meQuery);
   const [tab, setTab] = useState<"products" | "config" | "users" | "tx" | "recharge">("products");
-  if (me && !me.isAdmin) return <AppShell title="Admin"><p className="py-10 text-center text-muted-foreground">Admins only.</p></AppShell>;
+  if (!me) return <AppShell title="Admin"><p className="py-10 text-center text-muted-foreground">…</p></AppShell>;
+  if (!me.isAdmin) return <AppShell title="Admin"><p className="py-10 text-center text-muted-foreground">Admins only.</p></AppShell>;
   return (
     <AppShell title="Admin">
       <div className="mb-4 grid grid-cols-5 rounded-2xl bg-card p-1 text-[11px] shadow-card">
@@ -75,7 +76,11 @@ function Products() {
               <span className="absolute bottom-0 right-0 rounded-tl-lg bg-primary p-0.5 text-primary-foreground"><ImagePlus className="h-3.5 w-3.5" /></span>
               <input type="file" accept="image/*" className="sr-only" disabled={uploading === p.id} onChange={(e) => upload(p.id, e.target.files?.[0])} />
             </label>
-            <Input defaultValue={p.name} onBlur={(e) => e.target.value !== p.name && upd(p.id, { name: e.target.value })} />
+            <Input defaultValue={p.name} onBlur={(e) => {
+              if (e.target.value === p.name) return;
+              if (!e.target.value.trim()) { toast.error("Name cannot be empty"); e.target.value = p.name; return; }
+              upd(p.id, { name: e.target.value });
+            }} />
             <Switch checked={p.enabled} onCheckedChange={(v) => upd(p.id, { enabled: v })} />
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
@@ -84,6 +89,7 @@ function Products() {
                 <Input key={String(p[k] ?? "")} defaultValue={(p[k] as string | number | null) ?? ""} onBlur={(e) => {
                   const v = e.target.value; const num = ["price", "duration_days", "display_daily"].includes(k);
                   const val = v === "" ? null : num ? Number(v) : v;
+                  if (num && (val === null ? k !== "display_daily" : (typeof val === "number" && (!Number.isFinite(val) || val <= 0 || (k === "duration_days" && !Number.isInteger(val)))))) { toast.error("Enter a valid positive number"); e.target.value = String(p[k] ?? ""); return; }
                   if (String(val ?? "") !== String(p[k] ?? "")) upd(p.id, { [k]: val });
                 }} />
               </label>
@@ -104,6 +110,15 @@ function Config() {
     if (error) toast.error(error.message); else { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["config"] }); }
   };
   if (!data) return null;
+  // Min/max galat (abc, 0, min>max) ho to customer ki limit toot jaati hai, isliye save se pehle check.
+  const saveLimit = (key: "custom_min" | "custom_max", raw: string) => {
+    const v = raw.trim();
+    if (v === (data[key] ?? "")) return;
+    if (!/^\d+(\.\d{1,2})?$/.test(v) || Number(v) <= 0) { toast.error("Enter a valid amount like 10"); return; }
+    const other = Number(data[key === "custom_min" ? "custom_max" : "custom_min"]);
+    if (Number.isFinite(other) && (key === "custom_min" ? Number(v) > other : Number(v) < other)) { toast.error("Minimum cannot be more than maximum"); return; }
+    save(key, v);
+  };
   return (
     <div className="space-y-3 rounded-2xl bg-card p-4 shadow-card text-sm">
       <div className="space-y-2 rounded-xl border p-3">
@@ -119,14 +134,14 @@ function Config() {
           ))}
         </div>
       </div>
-      <label className="block">Custom saving minimum ₹<Input defaultValue={data["custom_min"]} onBlur={(e) => save("custom_min", e.target.value)} /></label>
-      <label className="block">Custom saving maximum ₹<Input defaultValue={data["custom_max"]} onBlur={(e) => save("custom_max", e.target.value)} /></label>
+      <label className="block">Custom saving minimum ₹<Input defaultValue={data["custom_min"]} onBlur={(e) => saveLimit("custom_min", e.target.value)} /></label>
+      <label className="block">Custom saving maximum ₹<Input defaultValue={data["custom_max"]} onBlur={(e) => saveLimit("custom_max", e.target.value)} /></label>
       <p className="rounded-xl bg-primary-soft p-2 text-xs">{/^[\w.-]{2,256}@[a-zA-Z][\w.-]{1,64}$/.test(data["upi_id"] ?? "") && data["upi_id"] !== "mba.demo@upi" ? "Real payments are ON. Members pay to the UPI ID below and enter their UPI reference; approve each one in Payments after you see the money in your account." : "Demo mode. Enter your real UPI ID below to start taking real money."}</p>
       <label className="block">Receiving UPI ID (money comes here)<Input placeholder="yourname@ybl" defaultValue={data["upi_id"]} onBlur={(e) => e.target.value !== (data["upi_id"] ?? "") && save("upi_id", e.target.value.trim())} /></label>
       <label className="block">Name shown in UPI apps<Input placeholder="MBA Savings" defaultValue={data["upi_name"]} onBlur={(e) => e.target.value !== (data["upi_name"] ?? "") && save("upi_name", e.target.value.trim())} /></label>
       <label className="block">Product prices last checked on<Input type="date" defaultValue={data["prices_checked_on"]} onBlur={(e) => e.target.value && e.target.value !== (data["prices_checked_on"] ?? "") && save("prices_checked_on", e.target.value)} /></label>
       <label className="block">Recharge plans last checked on<Input type="date" defaultValue={data["recharge_checked_on"]} onBlur={(e) => e.target.value && e.target.value !== (data["recharge_checked_on"] ?? "") && save("recharge_checked_on", e.target.value)} /></label>
-      <label className="block">Recharge offer text<Textarea rows={5} defaultValue={data["offer_text"]} onBlur={(e) => save("offer_text", e.target.value)} /></label>
+      <label className="block">Recharge offer text<Textarea rows={5} defaultValue={data["offer_text"]} onBlur={(e) => e.target.value !== (data["offer_text"] ?? "") && save("offer_text", e.target.value)} /></label>
     </div>
   );
 }
@@ -153,6 +168,8 @@ function Tx() {
     },
   });
   const review = async (id: string, approve: boolean) => {
+    // Approve/Reject dono wapas nahi hote (rejected UTR member dobara use nahi kar sakta), isliye pehle puchho.
+    if (!window.confirm(approve ? "Approve this payment? Do this only after the money is in your account. It cannot be undone." : "Reject this payment? The member cannot use this UTR again. It cannot be undone.")) return;
     setBusy(id);
     const { error } = await supabase.rpc("admin_review_payment", { _tx_id: id, _approve: approve });
     setBusy(null);
@@ -270,4 +287,4 @@ function Recharges() {
       {!list.length && <p className="py-10 text-center text-muted-foreground">{show === "todo" ? "No recharges waiting." : "No recharges done yet."}</p>}
     </div>
   );
-}
+        }
