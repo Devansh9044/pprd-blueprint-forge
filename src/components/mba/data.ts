@@ -41,15 +41,22 @@ export const txQuery = queryOptions({
 export const meQuery = queryOptions({
   queryKey: ["me"],
   queryFn: async () => {
-    const { data: u } = await supabase.auth.getUser();
-    const id = u.user!.id;
+    // getSession local hai (network nahi); session na ho to crash ki jagah saaf error.
+    const { data: u } = await supabase.auth.getSession();
+    const user = u.session?.user;
+    if (!user) throw new Error("Not signed in");
+    const id = user.id;
     const [p, r, s, rw] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", id),
       supabase.from("streaks").select("*").eq("user_id", id).maybeSingle(),
       supabase.from("rewards").select("*").order("created_at", { ascending: false }),
     ]);
-    return { id, email: u.user!.email, profile: p.data, isAdmin: !!r.data?.some((x) => x.role === "admin"), streak: s.data, rewards: rw.data ?? [] };
+    // Error chupana nahi: warna network hichki pe isAdmin silently false ho jata hai.
+    if (p.error) throw p.error;
+    if (r.error) throw r.error;
+    if (s.error) throw s.error;
+    return { id, email: user.email, profile: p.data, isAdmin: !!r.data?.some((x) => x.role === "admin"), streak: s.data, rewards: rw.data ?? [] };
   },
 });
 export const configQuery = queryOptions({
