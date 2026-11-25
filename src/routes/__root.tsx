@@ -125,8 +125,14 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
+    // Tab focus pe SIGNED_IN dobara aa sakta hai; user same hai to refetch nahi karna.
+    let lastUid: string | null | undefined;
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      const uid = session?.user?.id ?? null;
+      if (event === "INITIAL_SESSION") { lastUid = uid; return; }
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      if (event !== "USER_UPDATED" && uid === lastUid) return;
+      lastUid = uid;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
