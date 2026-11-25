@@ -2,18 +2,30 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { FEE_KEYS, moduleFee, paymentFor, productDaily, round2, validateCustomAmount } from "./savings";
 
+// App ka din IST (UTC+5:30) me chalta hai (streak bhi IST me hai), isliye goal ki dates bhi IST se.
+const istDate = (addDays = 0) => new Date(Date.now() + 19800000 + addDays * 86400000).toISOString().slice(0, 10);
+
 type CreateGoalInput =
   | { kind: "product"; productId: string; mobileNumber?: string }
   | { kind: "custom"; name: string; target: string; daily: string };
 
 export const createGoal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: CreateGoalInput) => d)
+  .inputValidator((d: CreateGoalInput) => {
+    // Client se aaya data trust nahi karte: type/shape yahin check hota hai.
+    if (d?.kind === "product") {
+      if (typeof d.productId !== "string" || !d.productId) throw new Error("Product not available");
+      if (d.mobileNumber != null && typeof d.mobileNumber !== "string") throw new Error("Enter a valid 10-digit mobile number");
+      return d;
+    }
+    if (d?.kind === "custom" && typeof d.name === "string" && typeof d.target === "string" && typeof d.daily === "string") return d;
+    throw new Error("Invalid request");
+  })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     let row: {
       module: string; product_id: string | null; goal_name: string; goal_amount: number;
-      daily_saving: number; fee_per_day: number; end_date: string; meta: Record<string, string>;
+      daily_saving: number; fee_per_day: number; start_date: string; end_date: string; meta: Record<string, string>;
     };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Owner's extra charge per module is admin config; read it server-side so the client can't change it.
@@ -30,7 +42,7 @@ export const createGoal = createServerFn({ method: "POST" })
         meta["plan"] = `${p.variant ?? ""} · ${p.name} · ${p.duration_days} days`;
       }
       const priced = { price: Number(p.price), duration_days: p.duration_days, display_daily: p.display_daily == null ? null : Number(p.display_daily) };
-      const end = new Date(Date.now() + p.duration_days * 86400000).toISOString().slice(0, 10);
+      const end = istDate(p.duration_days);
       row = {
         module: p.module, product_id: p.id,
         goal_name: p.module === "recharge" ? `${p.brand} ${p.variant ?? ""} recharge · ${p.name} · ${p.duration_days} days` : `${p.name}${p.variant ? ` (${p.variant})` : ""}`,
@@ -38,12 +50,15 @@ export const createGoal = createServerFn({ method: "POST" })
         goal_amount: round2(Number(p.price)),
         daily_saving: productDaily(priced),
         fee_per_day: moduleFee(p.module, fees),
-        end_date: end, meta,
+        start_date: istDate(), end_date: end, meta,
       };
     } else {
       const { data: cfg } = await supabase.from("app_config").select("key,value").in("key", ["custom_min", "custom_max"]);
-      const min = Number(cfg?.find((c) => c.key === "custom_min")?.value ?? 10);
-      const max = Number(cfg?.find((c) => c.key === "custom_max")?.value ?? 10000);
+      // Admin ne galti se "abc" ya khali daal diya to limit gayab na ho: NaN pe default pe wapas.
+      const rawMin = Number(cfg?.find((c) => c.key === "custom_min")?.value ?? 10);
+      const rawMax = Number(cfg?.find((c) => c.key === "custom_max")?.value ?? 10000);
+      const min = Number.isFinite(rawMin) && rawMin > 0 ? rawMin : 10;
+      const max = Number.isFinite(rawMax) && rawMax >= min ? rawMax : 10000;
       const err = validateCustomAmount(data.daily, min, max);
       if (err) throw new Error(err);
       const target = Number(data.target);
@@ -52,7 +67,7 @@ export const createGoal = createServerFn({ method: "POST" })
       const days = Math.ceil(target / Number(data.daily));
       row = {
         module: "custom", product_id: null, goal_name: name, goal_amount: round2(target),
-        daily_saving: round2(Number(data.daily)), fee_per_day: moduleFee("custom", fees), end_date: new Date(Date.now() + days * 86400000).toISOString().slice(0, 10), meta: {},
+        daily_saving: round2(Number(data.daily)), fee_per_day: moduleFee("custom", fees), start_date: istDate(), end_date: istDate(days), meta: {},
       };
     }
     const { data: g, error } = await supabaseAdmin.from("saving_goals").insert({ ...row, user_id: userId }).select("id").single();
@@ -71,10 +86,16 @@ export const createDemoOrder = createServerFn({ method: "POST" })
     const remaining = round2(Number(g.goal_amount) - Number(g.saved_amount));
     // Member pays the saving part + the owner's fee; only the saving part is credited to the goal.
     const { amount, fee, saving } = paymentFor(Number(g.daily_saving), Number(g.fee_per_day ?? 0), remaining);
-    const orderId = "MBA" + Date.now() + Math.random().toString(36).slice(2, 8).toUpperCase();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("transactions").insert({ user_id: userId, goal_id: g.id, provider_order_id: orderId, amount, fee });
-    if (error) throw new Error("Could not create order");
+    // Dialog baar-baar kholne pe naya order nahi banta: wahi pending (15 min ke andar) order dobara use hota hai.
+    const { data: open } = await supabaseAdmin.from("transactions").select("provider_order_id")
+      .eq("goal_id", g.id).eq("user_id", userId).eq("payment_status", "pending").eq("amount", amount)
+      .gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const orderId = open?.provider_order_id ?? "MBA" + Date.now() + Math.random().toString(36).slice(2, 8).toUpperCase();
+    if (!open) {
+      const { error } = await supabaseAdmin.from("transactions").insert({ user_id: userId, goal_id: g.id, provider_order_id: orderId, amount, fee });
+      if (error) throw new Error("Could not create order");
+    }
     // Payee details are admin/server-only config, so read them with the server client.
     const { data: cfg } = await supabaseAdmin.from("app_config").select("key,value").in("key", ["upi_id", "upi_name"]);
     const cfgId = cfg?.find((c) => c.key === "upi_id")?.value?.trim() ?? "";
