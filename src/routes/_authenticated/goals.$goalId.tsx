@@ -22,6 +22,7 @@ function GoalPage() {
   const { pay } = Route.useSearch();
   const { t } = useT();
   const qc = useQueryClient();
+  const nav = Route.useNavigate();
   const [open, setOpen] = useState(pay);
   const { data: goals, isLoading } = useQuery(goalsQuery);
   const { data: tx = [] } = useQuery(txQuery);
@@ -70,7 +71,7 @@ function GoalPage() {
           </div>
         ))}
       </div>
-      <PayDialog goalId={g.id} open={open} onOpenChange={setOpen} />
+      <PayDialog goalId={g.id} open={open} onOpenChange={(o) => { setOpen(o); if (!o && pay) nav({ search: { pay: false }, replace: true }); }} />
     </AppShell>
   );
-}
+                                                                                  }
