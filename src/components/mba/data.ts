@@ -24,17 +24,26 @@ export async function withImageSrc<T extends { image_url: string | null }>(rows:
 export const PAYMENT_STATUS: Record<string, string> = {
   pending: "Not paid", submitted: "Checking", verified: "Verified", rejected: "Rejected", expired: "Expired",
 };
+/** Admin ko RLS se sabke goals/payments dikhte hain; "My" screens ko sirf apni rows chahiye, isliye user_id se filter. */
+async function currentUserId() {
+  const { data } = await supabase.auth.getSession();
+  const uid = data.session?.user?.id;
+  if (!uid) throw new Error("Not signed in");
+  return uid;
+}
 export const goalsQuery = queryOptions({
   queryKey: ["goals"],
   queryFn: async () => {
-    const { data, error } = await supabase.from("saving_goals").select("*").order("created_at", { ascending: false });
+    const uid = await currentUserId();
+    const { data, error } = await supabase.from("saving_goals").select("*").eq("user_id", uid).order("created_at", { ascending: false });
     if (error) throw error; return data;
   },
 });
 export const txQuery = queryOptions({
   queryKey: ["tx"],
   queryFn: async () => {
-    const { data, error } = await supabase.from("transactions").select("*, saving_goals(goal_name)").order("created_at", { ascending: false });
+    const uid = await currentUserId();
+    const { data, error } = await supabase.from("transactions").select("*, saving_goals(goal_name)").eq("user_id", uid).order("created_at", { ascending: false });
     if (error) throw error; return data;
   },
 });
