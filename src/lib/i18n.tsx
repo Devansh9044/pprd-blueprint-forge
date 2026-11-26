@@ -40,6 +40,10 @@ const dict = {
   newToMba: { en: "New to MBA? Create an account", hi: "MBA में नए हैं? खाता बनाएँ" },
   haveAccount: { en: "Already have an account? Sign in", hi: "पहले से खाता है? साइन इन करें" },
   saveProfile: { en: "Save profile", hi: "प्रोफ़ाइल सेव करें" },
+  forgotPassword: { en: "Forgot password?", hi: "पासवर्ड भूल गए?" },
+  resetPassword: { en: "Reset password", hi: "पासवर्ड रीसेट करें" },
+  newPassword: { en: "New password", hi: "नया पासवर्ड" },
+  setNewPassword: { en: "Set new password", hi: "नया पासवर्ड सेट करें" },
 } as const;
 export type Key = keyof typeof dict;
 
