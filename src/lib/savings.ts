@@ -43,3 +43,10 @@ export function paymentFor(daily: number, fee: number, remaining: number) {
   const saving = round2(Math.min(Number(daily), Number(remaining)));
   return { saving, fee: round2(fee), amount: round2(saving + fee) };
 }
+
+/** Streak sirf aaj ya kal (IST) tak valid hai; usse purana ho to 0 dikhao (asli reset agle payment pe DB karta hai). */
+export function liveStreak(s: { current: number; last_date: string | null } | null | undefined, now: number = Date.now()): number {
+  if (!s || !s.last_date) return 0;
+  const ist = (ms: number) => new Date(ms + 19800000).toISOString().slice(0, 10);
+  return s.last_date === ist(now) || s.last_date === ist(now - 86400000) ? s.current : 0;
+}
