@@ -58,7 +58,7 @@ export function ProductList({ module, filterable }: { module: string; filterable
             <div className="text-right">
               <p className="text-lg font-extrabold text-accent">{inr(round2(daily + fee))}<span className="text-xs font-medium text-muted-foreground">{t("perDay")}</span></p>
               {fee > 0 && <p className="text-[10px] text-muted-foreground">{inr(daily)} saving + {inr(fee)} fee</p>}
-              <Button size="sm" disabled={busy === p.id} onClick={() => start(p.id)} className="mt-1 rounded-full">{t("startSaving")}</Button>
+              <Button size="sm" disabled={busy !== null} onClick={() => start(p.id)} className="mt-1 rounded-full">{t("startSaving")}</Button>
             </div>
           </div>
         );
