@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { moduleFee, paymentFor, productDaily, rechargeDaily, validateCustomAmount } from "./savings";
+import { liveStreak, moduleFee, paymentFor, productDaily, rechargeDaily, validateCustomAmount } from "./savings";
 
 describe("saving rules", () => {
   it("product daily saving = price ÷ days, rounded up so the full price is saved", () => {
@@ -45,5 +45,12 @@ describe("saving rules", () => {
     expect(validateCustomAmount("20000", 10, 10000)).toMatch(/Maximum/);
     expect(validateCustomAmount("12.345", 10, 10000)).toMatch(/valid/);
     expect(validateCustomAmount("50", 10, 10000)).toBeNull();
+  });
+  it("streak shows 0 once a day is missed (IST)", () => {
+    const now = Date.parse("2026-11-25T10:00:00+05:30");
+    expect(liveStreak({ current: 5, last_date: "2026-11-25" }, now)).toBe(5);
+    expect(liveStreak({ current: 5, last_date: "2026-11-24" }, now)).toBe(5);
+    expect(liveStreak({ current: 5, last_date: "2026-11-23" }, now)).toBe(0);
+    expect(liveStreak(null, now)).toBe(0);
   });
 });
