@@ -32,6 +32,13 @@ function AuthPage() {
       if (data.session) nav({ to: "/home", replace: true });
     });
   }, [nav]);
+  const forgot = async () => {
+    const email = f.email.trim();
+    if (!email) { toast.error("Enter your email first"); return; }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/reset-password" });
+    if (error) { toast.error(error.message); return; }
+    toast.success("If this email has an account, a reset link is on its way.");
+  };
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true);
     try {
@@ -66,10 +73,11 @@ function AuthPage() {
         <div className="space-y-1"><Label>{t("email")}</Label><Input type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
         <div className="space-y-1"><Label>{t("password")}</Label><Input type="password" required minLength={6} value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></div>
         <Button disabled={busy} className="w-full h-12 rounded-xl text-base font-bold">{mode === "in" ? t("signIn") : t("signUp")}</Button>
+        {mode === "in" && <button type="button" onClick={forgot} className="w-full text-sm text-muted-foreground">{t("forgotPassword")}</button>}
         <button type="button" onClick={() => setMode(mode === "in" ? "up" : "in")} className="w-full text-sm text-accent font-medium">
           {mode === "in" ? t("newToMba") : t("haveAccount")}
         </button>
       </form>
     </main>
   );
-          }
+}
