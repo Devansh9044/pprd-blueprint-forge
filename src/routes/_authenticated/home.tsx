@@ -4,7 +4,7 @@ import { Smartphone, Laptop, Bike, GraduationCap, Wallet, Signal, Flame, Target,
 import { AppShell } from "@/components/mba/AppShell";
 import { goalsQuery, meQuery } from "@/components/mba/data";
 import { useT, type Key } from "@/lib/i18n";
-import { inr } from "@/lib/savings";
+import { inr, liveStreak } from "@/lib/savings";
 import logo from "@/assets/mba-logo.png";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -28,7 +28,7 @@ function HomePage() {
   const total = goals.reduce((s, g) => s + Number(g.saved_amount), 0);
   const active = goals.filter((g) => g.status === "active").length;
   const stats = [
-    { label: t("streak"), value: me?.streak?.current ?? 0, icon: Flame },
+    { label: t("streak"), value: liveStreak(me?.streak), icon: Flame },
     { label: t("activeGoals"), value: active, icon: Target },
     { label: t("rewards"), value: me?.rewards.length ?? 0, icon: Gift },
   ];
