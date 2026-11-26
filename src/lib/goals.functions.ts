@@ -75,6 +75,30 @@ export const createGoal = createServerFn({ method: "POST" })
     return { id: g.id };
   });
 
+// Purane/galat goal hatane ke liye. Sirf wahi goal delete hota hai jisme koi paisa nahi aaya:
+// saved_amount 0 ho aur payments sirf adhoore (pending/expired) hon. Paisa wala goal yahan se nahi hatega.
+export const deleteGoal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { goalId: string }) => {
+    if (typeof d?.goalId !== "string" || !d.goalId) throw new Error("Goal not found");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: g } = await supabaseAdmin.from("saving_goals").select("id, saved_amount").eq("id", data.goalId).eq("user_id", userId).maybeSingle();
+    if (!g) throw new Error("Goal not found");
+    if (Number(g.saved_amount) > 0) throw new Error("This goal already has savings, so it cannot be deleted. Please contact support.");
+    const { data: tx } = await supabaseAdmin.from("transactions").select("payment_status, expires_at").eq("goal_id", g.id);
+    const rows = tx ?? [];
+    if (rows.some((x) => ["submitted", "verified", "rejected"].includes(x.payment_status))) throw new Error("This goal has payment records, so it cannot be deleted. Please contact support.");
+    // Abhi QR ka 15 min ka window khula ho to user paisa bhej sakta hai; tab delete nahi.
+    if (rows.some((x) => x.payment_status === "pending" && new Date(x.expires_at).getTime() > Date.now())) throw new Error("A payment window for this goal is still open. Please try again after 15 minutes.");
+    const { error } = await supabaseAdmin.from("saving_goals").delete().eq("id", g.id).eq("user_id", userId).eq("saved_amount", 0);
+    if (error) throw new Error("Could not delete goal");
+    return { ok: true };
+  });
+
 export const createDemoOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { goalId: string }) => d)
