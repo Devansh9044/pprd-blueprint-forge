@@ -18,6 +18,7 @@ function GoalsPage() {
   const { data: goals = [] } = useQuery(goalsQuery);
   const { data: tx = [] } = useQuery(txQuery);
   const list = goals.filter((g) => (tab === "completed" ? g.status === "completed" : g.status !== "completed"));
+  const history = tx.filter((x) => !["pending", "expired"].includes(x.payment_status));
   return (
     <AppShell title={t("goals")}>
       <div className="mb-4 grid grid-cols-3 rounded-2xl bg-card p-1 shadow-card">
@@ -27,7 +28,7 @@ function GoalsPage() {
       </div>
       {tab === "history" ? (
         <div className="space-y-2">
-          {tx.map((x) => (
+          {history.map((x) => (
             <div key={x.id} className="rounded-2xl bg-card p-3 shadow-card">
               <div className="flex justify-between"><p className="font-semibold">{x.saving_goals?.goal_name}</p><p className="font-bold text-accent">{inr(Number(x.amount))}</p></div>
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -37,7 +38,7 @@ function GoalsPage() {
               <p className="text-xs text-muted-foreground">{new Date(x.created_at).toLocaleString("en-IN")}</p>
             </div>
           ))}
-          {!tx.length && <p className="py-10 text-center text-muted-foreground">No transactions yet.</p>}
+          {!history.length && <p className="py-10 text-center text-muted-foreground">No transactions yet.</p>}
         </div>
       ) : (
         <div className="space-y-3">
