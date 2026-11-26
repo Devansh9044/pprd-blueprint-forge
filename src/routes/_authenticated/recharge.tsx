@@ -36,7 +36,7 @@ function RechargePage() {
   const [op, setOp] = useState("Jio");
   const [days, setDays] = useState<number | null>(null);
   const [pid, setPid] = useState<string | null>(null);
-  const [mobile, setMobile] = useState("");
+  const [mobile, setMobile] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const create = useServerFn(createGoal);
   const nav = useNavigate();
@@ -45,7 +45,7 @@ function RechargePage() {
   const dur = days != null && validities.includes(days) ? days : validities[0];
   const plans = opPlans.filter((p) => p.duration_days === dur);
   const sel = plans.find((p) => p.id === pid);
-  const num = mobile || me?.profile?.mobile_number || "";
+  const num = mobile ?? me?.profile?.mobile_number ?? "";
   const checkedOn = cfg?.["recharge_checked_on"];
   const fee = moduleFee("recharge", cfg);
 
