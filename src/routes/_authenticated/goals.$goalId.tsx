@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AppShell } from "@/components/mba/AppShell";
 import { PayDialog } from "@/components/mba/PayDialog";
@@ -9,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { inr, round2 } from "@/lib/savings";
+import { deleteGoal } from "@/lib/goals.functions";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/goals/$goalId")({
@@ -23,6 +25,8 @@ function GoalPage() {
   const { t } = useT();
   const qc = useQueryClient();
   const nav = Route.useNavigate();
+  const del = useServerFn(deleteGoal);
+  const [deleting, setDeleting] = useState(false);
   const [open, setOpen] = useState(pay);
   const { data: goals, isLoading } = useQuery(goalsQuery);
   const { data: tx = [] } = useQuery(txQuery);
@@ -36,6 +40,17 @@ function GoalPage() {
   const togglePause = async () => {
     const { error } = await supabase.from("saving_goals").update({ status: g.status === "paused" ? "active" : "paused" }).eq("id", g.id);
     if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["goals"] });
+  };
+  const removeGoal = async () => {
+    if (deleting) return;
+    if (!window.confirm("Delete this goal? This cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      await del({ data: { goalId: g.id } });
+      toast.success("Goal deleted");
+      nav({ to: "/goals", replace: true });
+      qc.invalidateQueries();
+    } catch (e) { toast.error((e as Error).message); setDeleting(false); }
   };
   const rows = [
     ["Daily saving", inr(Number(g.daily_saving))], ...(fee > 0 ? [["Service fee / day", inr(fee)]] : []), ["Remaining", inr(round2(total - saved))],
@@ -62,6 +77,7 @@ function GoalPage() {
       )}
       {g.status === "active" && <Button onClick={() => setOpen(true)} className="mt-4 h-12 w-full rounded-xl text-base font-bold">{t("payToday")} · {inr(today)}</Button>}
       {g.status !== "completed" && <Button variant="outline" onClick={togglePause} className="mt-2 w-full rounded-xl">{g.status === "paused" ? "Resume goal" : "Pause goal"}</Button>}
+      {g.status !== "completed" && saved === 0 && <Button variant="outline" disabled={deleting} onClick={removeGoal} className="mt-2 w-full rounded-xl text-destructive">Delete goal</Button>}
       <h2 className="mb-2 mt-6 text-lg font-bold text-accent">{t("history")}</h2>
       <div className="space-y-2">
         {tx.filter((x) => x.goal_id === g.id && ["verified", "submitted", "rejected"].includes(x.payment_status)).map((x) => (
@@ -74,4 +90,4 @@ function GoalPage() {
       <PayDialog goalId={g.id} open={open} onOpenChange={(o) => { setOpen(o); if (!o && pay) nav({ search: { pay: false }, replace: true }); }} />
     </AppShell>
   );
-                                                                                  }
+}
