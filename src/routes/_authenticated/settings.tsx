@@ -22,16 +22,26 @@ function SettingsPage() {
   const qc = useQueryClient();
   const nav = useNavigate();
   const [f, setF] = useState({ full_name: "", mobile_number: "" });
+  const [busy, setBusy] = useState(false);
   useEffect(() => { if (me?.profile) setF({ full_name: me.profile.full_name ?? "", mobile_number: me.profile.mobile_number ?? "" }); }, [me?.profile]);
   const save = async () => {
-    if (!me) return;
+    if (!me || busy) return;
     const full_name = f.full_name.trim();
     if (!full_name) { toast.error("Enter your name"); return; }
     if (!/^[6-9]\d{9}$/.test(f.mobile_number)) { toast.error("Enter a valid 10-digit mobile number"); return; }
-    const { error } = await supabase.from("profiles").update({ full_name, mobile_number: f.mobile_number }).eq("id", me.id);
-    if (error) toast.error(error.message); else { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["me"] }); }
+    setBusy(true);
+    try {
+      const { error } = await supabase.from("profiles").update({ full_name, mobile_number: f.mobile_number }).eq("id", me.id);
+      if (error) toast.error(error.message); else { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["me"] }); }
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
-  const out = async () => { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); nav({ to: "/auth", replace: true }); };
+  const out = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); nav({ to: "/auth", replace: true });
+    } catch (e) { toast.error((e as Error).message); setBusy(false); }
+  };
   return (
     <AppShell title={t("settings")}>
       <div className="space-y-4 rounded-3xl bg-card p-5 shadow-card">
@@ -46,9 +56,9 @@ function SettingsPage() {
         <p className="text-sm text-muted-foreground">{me?.email}</p>
         <div className="space-y-1"><Label>{t("fullName")}</Label><Input value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} /></div>
         <div className="space-y-1"><Label>{t("mobileNumber")}</Label><Input maxLength={10} value={f.mobile_number} onChange={(e) => setF({ ...f, mobile_number: e.target.value.replace(/\D/g, "") })} /></div>
-        <Button onClick={save} className="w-full">{t("saveProfile")}</Button>
+        <Button disabled={busy} onClick={save} className="w-full">{t("saveProfile")}</Button>
       </div>
-      <Button variant="outline" onClick={out} className="mt-4 w-full">{t("signOut")}</Button>
+      <Button variant="outline" disabled={busy} onClick={out} className="mt-4 w-full">{t("signOut")}</Button>
       <div className="mt-6 space-y-3 rounded-3xl bg-card p-5 shadow-card">
         <div className="flex gap-4 text-sm font-semibold text-primary">
           <a href="/privacy" className="underline">Privacy Policy</a>
