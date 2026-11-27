@@ -51,11 +51,12 @@ function Products() {
     if (!file.type.startsWith("image/")) { toast.error("Choose a photo file"); return; }
     if (file.size > 5 * 1024 * 1024) { toast.error("Photo must be under 5 MB"); return; }
     setUploading(id);
-    const path = `${id}/${Date.now()}.${(file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "")}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
-    setUploading(null);
-    if (error) { toast.error(error.message); return; }
-    await upd(id, { image_url: STORAGE_PREFIX + path });
+    try {
+      const path = `${id}/${Date.now()}.${(file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+      if (error) { toast.error(error.message); return; }
+      await upd(id, { image_url: STORAGE_PREFIX + path });
+    } catch (e) { toast.error((e as Error).message); } finally { setUploading(null); }
   };
   const upd = async (id: string, patch: Record<string, unknown>) => {
     const { error } = await supabase.from("products").update(patch as never).eq("id", id);
@@ -111,12 +112,13 @@ function Config() {
   };
   if (!data) return null;
   // Min/max galat (abc, 0, min>max) ho to customer ki limit toot jaati hai, isliye save se pehle check.
-  const saveLimit = (key: "custom_min" | "custom_max", raw: string) => {
-    const v = raw.trim();
-    if (v === (data[key] ?? "")) return;
-    if (!/^\d+(\.\d{1,2})?$/.test(v) || Number(v) <= 0) { toast.error("Enter a valid amount like 10"); return; }
+  const saveLimit = (key: "custom_min" | "custom_max", el: HTMLInputElement) => {
+    const v = el.value.trim();
+    const old = data[key] ?? "";
+    if (v === old) return;
+    if (!/^\d+(\.\d{1,2})?$/.test(v) || Number(v) <= 0) { toast.error("Enter a valid amount like 10"); el.value = old; return; }
     const other = Number(data[key === "custom_min" ? "custom_max" : "custom_min"]);
-    if (Number.isFinite(other) && (key === "custom_min" ? Number(v) > other : Number(v) < other)) { toast.error("Minimum cannot be more than maximum"); return; }
+    if (Number.isFinite(other) && (key === "custom_min" ? Number(v) > other : Number(v) < other)) { toast.error("Minimum cannot be more than maximum"); el.value = old; return; }
     save(key, v);
   };
   // UPI ID khali/galat save hua to DB ka real_upi_enabled() false ho jata hai aur Demo mode chalu ho jata hai
@@ -144,15 +146,16 @@ function Config() {
           {FEE_FIELDS.map(([key, label]) => (
             <label key={key} className="block text-xs">{label} ₹<Input inputMode="decimal" defaultValue={data[key] ?? String(DEFAULT_FEES[key])} onBlur={(e) => {
               const v = e.target.value.trim();
-              if (!/^\d{1,2}(\.\d{1,2})?$/.test(v)) { toast.error("Enter an amount like 0.90"); return; }
+              const old = data[key] ?? String(DEFAULT_FEES[key]);
+              if (!/^\d{1,2}(\.\d{1,2})?$/.test(v)) { toast.error("Enter an amount like 0.90"); e.target.value = old; return; }
               if (v !== (data[key] ?? "")) save(key, v);
             }} /></label>
           ))}
         </div>
       </div>
-      <label className="block">Custom saving minimum ₹<Input defaultValue={data["custom_min"]} onBlur={(e) => saveLimit("custom_min", e.target.value)} /></label>
-      <label className="block">Custom saving maximum ₹<Input defaultValue={data["custom_max"]} onBlur={(e) => saveLimit("custom_max", e.target.value)} /></label>
-      <p className="rounded-xl bg-primary-soft p-2 text-xs">{/^[\w.-]{2,255}@[a-zA-Z][\w.-]{1,64}$/.test(data["upi_id"] ?? "") && data["upi_id"] !== "mba.demo@upi" ? "Real payments are ON. Members pay to the UPI ID below and enter their UPI reference; approve each one in Payments after you see the money in your account." : "Demo mode. Enter your real UPI ID below to start taking real money."}</p>
+      <label className="block">Custom saving minimum ₹<Input defaultValue={data["custom_min"]} onBlur={(e) => saveLimit("custom_min", e.target)} /></label>
+      <label className="block">Custom saving maximum ₹<Input defaultValue={data["custom_max"]} onBlur={(e) => saveLimit("custom_max", e.target)} /></label>
+      <p className="rounded-xl bg-primary-soft p-2 text-xs">{UPI_RE.test(data["upi_id"] ?? "") && data["upi_id"] !== "mba.demo@upi" ? "Real payments are ON. Members pay to the UPI ID below and enter their UPI reference; approve each one in Payments after you see the money in your account." : "Demo mode. Enter your real UPI ID below to start taking real money."}</p>
       <label className="block">Receiving UPI ID (money comes here)<Input placeholder="yourname@ybl" defaultValue={data["upi_id"]} onBlur={(e) => saveUpi(e.target)} /></label>
       <label className="block">Name shown in UPI apps<Input placeholder="MBA Savings" defaultValue={data["upi_name"]} onBlur={(e) => e.target.value !== (data["upi_name"] ?? "") && save("upi_name", e.target.value.trim())} /></label>
       <label className="block">Product prices last checked on<Input type="date" defaultValue={data["prices_checked_on"]} onBlur={(e) => e.target.value && e.target.value !== (data["prices_checked_on"] ?? "") && save("prices_checked_on", e.target.value)} /></label>
@@ -187,9 +190,10 @@ function Tx() {
     // Approve/Reject dono wapas nahi hote (rejected UTR member dobara use nahi kar sakta), isliye pehle puchho.
     if (!window.confirm(approve ? "Approve this payment? Do this only after the money is in your account. It cannot be undone." : "Reject this payment? The member cannot use this UTR again. It cannot be undone.")) return;
     setBusy(id);
-    const { error } = await supabase.rpc("admin_review_payment", { _tx_id: id, _approve: approve });
-    setBusy(null);
-    if (error) toast.error(error.message); else { toast.success(approve ? "Approved — added to the goal" : "Rejected"); qc.invalidateQueries(); }
+    try {
+      const { error } = await supabase.rpc("admin_review_payment", { _tx_id: id, _approve: approve });
+      if (error) toast.error(error.message); else { toast.success(approve ? "Approved — added to the goal" : "Rejected"); qc.invalidateQueries(); }
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
   };
   const list = data ?? [];
   const { data: profit } = useQuery({ queryKey: ["admin-profit"], queryFn: async () => {
@@ -253,9 +257,10 @@ function Recharges() {
   });
   const done = async (id: string) => {
     setBusy(id);
-    const { error } = await supabase.rpc("admin_mark_fulfilled", { _goal_id: id, _ref: refs[id] ?? "" });
-    setBusy(null);
-    if (error) toast.error(error.message); else { toast.success("Marked as recharged"); qc.invalidateQueries(); }
+    try {
+      const { error } = await supabase.rpc("admin_mark_fulfilled", { _goal_id: id, _ref: refs[id] ?? "" });
+      if (error) toast.error(error.message); else { toast.success("Marked as recharged"); qc.invalidateQueries(); }
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
   };
   const list = data ?? [];
   const { data: profit } = useQuery({ queryKey: ["admin-profit"], queryFn: async () => {
