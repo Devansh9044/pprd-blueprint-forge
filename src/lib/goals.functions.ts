@@ -132,7 +132,7 @@ export const createDemoOrder = createServerFn({ method: "POST" })
     // Payee details are admin/server-only config, so read them with the server client.
     const { data: cfg } = await supabaseAdmin.from("app_config").select("key,value").in("key", ["upi_id", "upi_name"]);
     const cfgId = cfg?.find((c) => c.key === "upi_id")?.value?.trim() ?? "";
-    const payeeId = /^[\w.-]{2,256}@[a-zA-Z][\w.-]{1,64}$/.test(cfgId) ? cfgId : "mba.demo@upi";
+    const payeeId = /^[A-Za-z0-9_.-]{2,255}@[a-zA-Z][A-Za-z0-9_.-]{1,64}$/.test(cfgId) ? cfgId : "mba.demo@upi";
     const payeeName = (cfg?.find((c) => c.key === "upi_name")?.value?.trim() || "MBA Savings").slice(0, 50);
     const query = new URLSearchParams({
       pa: payeeId, pn: payeeName, am: amount.toFixed(2), cu: "INR", tr: orderId, tn: `MBA ${g.goal_name}`.slice(0, 50),
