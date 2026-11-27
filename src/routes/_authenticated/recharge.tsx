@@ -101,7 +101,7 @@ function RechargePage() {
         </p>
       )}
       <div className="mt-6 rounded-2xl border border-dashed border-gold bg-card p-4 text-sm">
-        <p className="font-bold text-accent">🎁 Recharge offer (proposed)</p>
+        <p className="font-bold text-accent">🎁 Recharge offer</p>
         <p className="mt-1 text-muted-foreground">{cfg?.["offer_text"]}</p>
       </div>
     </AppShell>
