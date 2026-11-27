@@ -29,6 +29,7 @@ function ResetPasswordPage() {
       // Email ka reset link kholne se temporary session ban jata hai; na ho to link purana ya galat hai.
       const { data } = await supabase.auth.getSession();
       if (!data.session) throw new Error("This reset link has expired. Please request a new one from the sign-in page.");
+      if (password.length < 8) throw new Error("Password must be at least 8 characters");
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast.success("Password updated.");
@@ -42,7 +43,7 @@ function ResetPasswordPage() {
           <img src={logo} alt="MBA" width={1024} height={1024} className="h-20 w-20" />
           <h1 className="text-2xl font-bold text-accent">{t("resetPassword")}</h1>
         </div>
-        <div className="space-y-1"><Label>{t("newPassword")}</Label><Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+        <div className="space-y-1"><Label>{t("newPassword")}</Label><Input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
         <Button disabled={busy} className="w-full h-12 rounded-xl text-base font-bold">{t("setNewPassword")}</Button>
       </form>
     </main>
