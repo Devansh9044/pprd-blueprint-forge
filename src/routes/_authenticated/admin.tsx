@@ -119,6 +119,22 @@ function Config() {
     if (Number.isFinite(other) && (key === "custom_min" ? Number(v) > other : Number(v) < other)) { toast.error("Minimum cannot be more than maximum"); return; }
     save(key, v);
   };
+  // UPI ID khali/galat save hua to DB ka real_upi_enabled() false ho jata hai aur Demo mode chalu ho jata hai
+  // (tab koi bhi member "Simulate payment confirmed" dabake bina paise ke goal bhar sakta hai). Isliye save se pehle check.
+  // Regex DB ke real_upi_enabled() jaisa hi hai (255).
+  const UPI_RE = /^[A-Za-z0-9_.-]{2,255}@[a-zA-Z][A-Za-z0-9_.-]{1,64}$/;
+  const saveUpi = (el: HTMLInputElement) => {
+    const v = el.value.trim();
+    const old = data["upi_id"] ?? "";
+    if (v === old) return;
+    const realNow = UPI_RE.test(old) && old !== "mba.demo@upi";
+    if (v === "mba.demo@upi") {
+      if (realNow && !window.confirm("Demo mode ON karne par koi bhi member bina paise diye goal bhar sakega. Pakka?")) { el.value = old; return; }
+      save("upi_id", v); return;
+    }
+    if (!UPI_RE.test(v)) { toast.error("Enter a valid UPI ID like yourname@ybl"); el.value = old; return; }
+    save("upi_id", v);
+  };
   return (
     <div className="space-y-3 rounded-2xl bg-card p-4 shadow-card text-sm">
       <div className="space-y-2 rounded-xl border p-3">
@@ -136,8 +152,8 @@ function Config() {
       </div>
       <label className="block">Custom saving minimum ₹<Input defaultValue={data["custom_min"]} onBlur={(e) => saveLimit("custom_min", e.target.value)} /></label>
       <label className="block">Custom saving maximum ₹<Input defaultValue={data["custom_max"]} onBlur={(e) => saveLimit("custom_max", e.target.value)} /></label>
-      <p className="rounded-xl bg-primary-soft p-2 text-xs">{/^[\w.-]{2,256}@[a-zA-Z][\w.-]{1,64}$/.test(data["upi_id"] ?? "") && data["upi_id"] !== "mba.demo@upi" ? "Real payments are ON. Members pay to the UPI ID below and enter their UPI reference; approve each one in Payments after you see the money in your account." : "Demo mode. Enter your real UPI ID below to start taking real money."}</p>
-      <label className="block">Receiving UPI ID (money comes here)<Input placeholder="yourname@ybl" defaultValue={data["upi_id"]} onBlur={(e) => e.target.value !== (data["upi_id"] ?? "") && save("upi_id", e.target.value.trim())} /></label>
+      <p className="rounded-xl bg-primary-soft p-2 text-xs">{/^[\w.-]{2,255}@[a-zA-Z][\w.-]{1,64}$/.test(data["upi_id"] ?? "") && data["upi_id"] !== "mba.demo@upi" ? "Real payments are ON. Members pay to the UPI ID below and enter their UPI reference; approve each one in Payments after you see the money in your account." : "Demo mode. Enter your real UPI ID below to start taking real money."}</p>
+      <label className="block">Receiving UPI ID (money comes here)<Input placeholder="yourname@ybl" defaultValue={data["upi_id"]} onBlur={(e) => saveUpi(e.target)} /></label>
       <label className="block">Name shown in UPI apps<Input placeholder="MBA Savings" defaultValue={data["upi_name"]} onBlur={(e) => e.target.value !== (data["upi_name"] ?? "") && save("upi_name", e.target.value.trim())} /></label>
       <label className="block">Product prices last checked on<Input type="date" defaultValue={data["prices_checked_on"]} onBlur={(e) => e.target.value && e.target.value !== (data["prices_checked_on"] ?? "") && save("prices_checked_on", e.target.value)} /></label>
       <label className="block">Recharge plans last checked on<Input type="date" defaultValue={data["recharge_checked_on"]} onBlur={(e) => e.target.value && e.target.value !== (data["recharge_checked_on"] ?? "") && save("recharge_checked_on", e.target.value)} /></label>
@@ -287,4 +303,4 @@ function Recharges() {
       {!list.length && <p className="py-10 text-center text-muted-foreground">{show === "todo" ? "No recharges waiting." : "No recharges done yet."}</p>}
     </div>
   );
-        }
+}
