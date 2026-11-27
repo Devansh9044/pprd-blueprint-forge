@@ -46,23 +46,25 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
   const confirm = async () => {
     if (!order || sending) return;
     setSending(true);
-    const { error } = await supabase.rpc("confirm_demo_payment", { _order_id: order.orderId });
-    setSending(false);
-    if (error) { toast.error(error.message); return; }
-    setStatus("verified");
-    toast.success(`${inr(order.saving)} saved!`);
-    qc.invalidateQueries();
+    try {
+      const { error } = await supabase.rpc("confirm_demo_payment", { _order_id: order.orderId });
+      if (error) { toast.error(error.message); return; }
+      setStatus("verified");
+      toast.success(`${inr(order.saving)} saved!`);
+      qc.invalidateQueries();
+    } catch (e) { toast.error((e as Error).message); } finally { setSending(false); }
   };
   const submitUtr = async () => {
-    if (!order) return;
+    if (!order || sending) return;
     const clean = utr.replace(/\s/g, "");
     if (!/^\d{12}$/.test(clean)) { toast.error("Enter the 12-digit UPI reference number (UTR)"); return; }
     setSending(true);
-    const { error } = await supabase.rpc("submit_payment_utr", { _order_id: order.orderId, _utr: clean });
-    setSending(false);
-    if (error) { toast.error(error.message); return; }
-    setStatus("submitted");
-    qc.invalidateQueries();
+    try {
+      const { error } = await supabase.rpc("submit_payment_utr", { _order_id: order.orderId, _utr: clean });
+      if (error) { toast.error(error.message); return; }
+      setStatus("submitted");
+      qc.invalidateQueries();
+    } catch (e) { toast.error((e as Error).message); } finally { setSending(false); }
   };
   const openApp = (app: (typeof UPI_APPS)[number]) => {
     if (!order) return;
@@ -72,9 +74,12 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
   const share = async () => {
     if (!order) return;
     if (navigator.share) await navigator.share({ title: "MBA saving", text: order.upi }).catch(() => {});
-    else { await navigator.clipboard.writeText(order.upi); toast.success("Payment link copied"); }
+    else await copy(order.upi, "Payment link");
   };
-  const copy = async (text: string, label: string) => { await navigator.clipboard.writeText(text); toast.success(`${label} copied`); };
+  const copy = async (text: string, label: string) => {
+    try { await navigator.clipboard.writeText(text); toast.success(`${label} copied`); }
+    catch { toast.error(`Could not copy ${label.toLowerCase()}`); }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -173,4 +178,4 @@ export function PayDialog({ goalId, open, onOpenChange }: { goalId: string | nul
       </DialogContent>
     </Dialog>
   );
-                                               }
+}
