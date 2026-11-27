@@ -54,7 +54,7 @@ function RechargePage() {
   const fee = moduleFee("recharge", cfg);
 
   const go = async () => {
-    if (!sel) return;
+    if (!sel || busy) return;
     setBusy(true);
     try { const g = await create({ data: { kind: "product", productId: sel.id, mobileNumber: num } }); nav({ to: "/goals/$goalId", params: { goalId: g.id }, search: { pay: true } }); }
     catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
