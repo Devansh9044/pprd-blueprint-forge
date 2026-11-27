@@ -54,12 +54,17 @@ const Ctx = createContext<{ lang: Lang; setLang: (l: Lang) => void; t: (k: Key) 
 export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
   useEffect(() => {
-    const s = localStorage.getItem("mba-lang");
-    if (s === "hi" || s === "en") setLangState(s);
+    try {
+      const s = localStorage.getItem("mba-lang");
+      if (s === "hi" || s === "en") setLangState(s);
+    } catch { /* storage blocked */ }
   }, []);
   // Screen reader / font ke liye <html lang> bhi bhasha ke saath badle.
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
-  const setLang = (l: Lang) => { setLangState(l); localStorage.setItem("mba-lang", l); };
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    try { localStorage.setItem("mba-lang", l); } catch { /* storage blocked */ }
+  };
   return <Ctx.Provider value={{ lang, setLang, t: (k) => dict[k][lang] }}>{children}</Ctx.Provider>;
 }
 export const useT = () => useContext(Ctx);
