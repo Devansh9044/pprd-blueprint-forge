@@ -59,19 +59,21 @@ export const meQuery = queryOptions({
       supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", id),
       supabase.from("streaks").select("*").eq("user_id", id).maybeSingle(),
-      supabase.from("rewards").select("*").order("created_at", { ascending: false }),
+      supabase.from("rewards").select("*").eq("user_id", id).order("created_at", { ascending: false }),
     ]);
     // Error chupana nahi: warna network hichki pe isAdmin silently false ho jata hai.
     if (p.error) throw p.error;
     if (r.error) throw r.error;
     if (s.error) throw s.error;
+    if (rw.error) throw rw.error;
     return { id, email: user.email, profile: p.data, isAdmin: !!r.data?.some((x) => x.role === "admin"), streak: s.data, rewards: rw.data ?? [] };
   },
 });
 export const configQuery = queryOptions({
   queryKey: ["config"],
   queryFn: async () => {
-    const { data } = await supabase.from("app_config").select("*");
+    const { data, error } = await supabase.from("app_config").select("*");
+    if (error) throw error;
     return Object.fromEntries((data ?? []).map((c) => [c.key, c.value])) as Record<string, string>;
   },
 });
