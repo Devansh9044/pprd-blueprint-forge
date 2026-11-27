@@ -26,6 +26,7 @@ export function ProductList({ module, filterable }: { module: string; filterable
   const Icon = icons[module] ?? Smartphone;
 
   const start = async (id: string) => {
+    if (busy !== null) return;
     setBusy(id);
     try { const g = await create({ data: { kind: "product", productId: id } }); nav({ to: "/goals/$goalId", params: { goalId: g.id }, search: { pay: true } }); }
     catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
