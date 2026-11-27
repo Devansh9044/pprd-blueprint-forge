@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/mba/AppShell";
 import { goalsQuery, txQuery, PAYMENT_STATUS } from "@/components/mba/data";
 import { Progress } from "@/components/ui/progress";
-import { inr } from "@/lib/savings";
+import { inr, round2 } from "@/lib/savings";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/goals/")({
@@ -43,11 +43,12 @@ function GoalsPage() {
       ) : (
         <div className="space-y-3">
           {list.map((g) => {
-            const pct = Math.min(100, (Number(g.saved_amount) / Number(g.goal_amount)) * 100);
+            const total = Number(g.goal_amount);
+            const pct = total > 0 ? Math.min(100, (Number(g.saved_amount) / total) * 100) : 0;
             return (
               <Link key={g.id} to="/goals/$goalId" params={{ goalId: g.id }} search={{ pay: false }} className="block rounded-2xl bg-card p-4 shadow-card">
                 <div className="flex justify-between"><p className="font-bold">{g.goal_name}</p><span className="text-xs capitalize text-muted-foreground">{g.status}</span></div>
-                <p className="text-sm text-muted-foreground">{inr(Number(g.saved_amount))} of {inr(Number(g.goal_amount))} · {inr(Number(g.daily_saving) + Number(g.fee_per_day ?? 0))}{t("perDay")}</p>
+                <p className="text-sm text-muted-foreground">{inr(Number(g.saved_amount))} of {inr(total)} · {inr(round2(Number(g.daily_saving) + Number(g.fee_per_day ?? 0)))}{t("perDay")}</p>
                 <Progress value={pct} className="mt-2 h-2" />
               </Link>
             );
