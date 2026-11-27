@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/mba/AppShell";
 import { configQuery, meQuery, productsQuery } from "@/components/mba/data";
 import { createGoal } from "@/lib/goals.functions";
-import { inr, moduleFee, rechargeDaily, round2 } from "@/lib/savings";
+import { inr, moduleFee, productDaily, round2 } from "@/lib/savings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
@@ -26,6 +26,10 @@ export const Route = createFileRoute("/_authenticated/recharge")({
 });
 
 const OPERATORS = ["Jio", "Airtel", "Vi", "BSNL"];
+
+// Server (createGoal) admin ka display_daily override maanta hai, isliye screen pe bhi wahi productDaily; warna dikhta kuch aur, katta kuch aur.
+const dailyOf = (p: { price: number | string; duration_days: number; display_daily: number | string | null }) =>
+  productDaily({ price: Number(p.price), duration_days: p.duration_days, display_daily: p.display_daily == null ? null : Number(p.display_daily) });
 
 function RechargePage() {
   const { t } = useT();
@@ -78,7 +82,7 @@ function RechargePage() {
           <button key={p.id} onClick={() => setPid(p.id)} className={`rounded-2xl border p-3 text-left ${pid === p.id ? "border-primary ring-2 ring-primary" : "bg-card"}`}>
             <p className="text-lg font-extrabold">{inr(Number(p.price))}</p>
             <p className="text-xs font-semibold text-muted-foreground">{p.name}</p>
-            <p className="mt-1 text-base font-extrabold text-accent">{inr(round2(rechargeDaily(Number(p.price), p.duration_days) + fee))}<span className="text-xs font-medium text-muted-foreground">{t("perDay")}</span></p>
+            <p className="mt-1 text-base font-extrabold text-accent">{inr(round2(dailyOf(p) + fee))}<span className="text-xs font-medium text-muted-foreground">{t("perDay")}</span></p>
           </button>
         ))}
         {!plans.length && <p className="col-span-2 py-6 text-center text-sm text-muted-foreground">No plans for {op} right now.</p>}
@@ -87,7 +91,7 @@ function RechargePage() {
       <Input inputMode="numeric" maxLength={10} placeholder="10-digit number" value={num} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))} />
       {sel && (
         <div className="mt-5 rounded-2xl bg-primary-soft p-4 text-sm">
-          Pay <b>{inr(round2(rechargeDaily(Number(sel.price), sel.duration_days) + fee))}</b> daily ({inr(rechargeDaily(Number(sel.price), sel.duration_days))} saving + {inr(fee)} fee) for {sel.duration_days} days → <b>{inr(Number(sel.price))}</b> for your {op} {sel.name} recharge. When your saving is full, we recharge <b>{num || "your number"}</b> for you.
+          Pay <b>{inr(round2(dailyOf(sel) + fee))}</b> daily ({inr(dailyOf(sel))} saving + {inr(fee)} fee) for {sel.duration_days} days → <b>{inr(Number(sel.price))}</b> for your {op} {sel.name} recharge. When your saving is full, we recharge <b>{num || "your number"}</b> for you.
         </div>
       )}
       <Button disabled={!sel || busy} onClick={go} className="mt-4 h-12 w-full rounded-xl text-base font-bold">{t("startSaving")}</Button>
