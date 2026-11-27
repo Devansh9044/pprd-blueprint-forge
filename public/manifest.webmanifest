@@ -1,0 +1,16 @@
+{
+  "name": "MBA – My Budget Assistant",
+  "short_name": "MBA",
+  "description": "Save small every day for your recharge, phone, laptop, bike and college goals.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eff9fd",
+  "theme_color": "#16a4e2",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
