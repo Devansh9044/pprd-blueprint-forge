@@ -23,7 +23,7 @@ export const deleteAccount = createServerFn({ method: "POST" })
     if (gErr) throw new Error("Could not check your goals. Please try again.");
     const holdsMoney = (goals ?? []).some((g) =>
       (["active", "paused"].includes(g.status) && Number(g.saved_amount) > 0) ||
-      (g.module === "recharge" && g.status === "completed" && !g.fulfilled_at));
+      (g.status === "completed" && Number(g.saved_amount) > 0 && !g.fulfilled_at));
     if (holdsMoney) throw new Error(`You still have saved money in a goal. ${contact}`);
 
     // 2) Bina paise wale goals poore hata do (unke adhoore payments bhi saath hat jate hain).
