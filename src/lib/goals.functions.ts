@@ -101,16 +101,25 @@ export const deleteGoal = createServerFn({ method: "POST" })
 
 export const createDemoOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { goalId: string }) => d)
+  .inputValidator((d: { goalId: string }) => {
+    if (typeof d?.goalId !== "string" || !d.goalId) throw new Error("Goal not found");
+    return d;
+  })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: g } = await supabase.from("saving_goals").select("*").eq("id", data.goalId).eq("user_id", userId).single();
     if (!g) throw new Error("Goal not found");
     if (g.status !== "active") throw new Error("This goal is not active");
-    const remaining = round2(Number(g.goal_amount) - Number(g.saved_amount));
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Jo payment "submitted" hai (admin approval baaki) wo bhi goal ka hissa banne wali hai; usse hatakar hi remaining nikalo,
+    // warna approval se pehle dobara pay karne par goal target se upar chala jata hai.
+    const { data: waitingTx } = await supabaseAdmin.from("transactions").select("amount, fee")
+      .eq("goal_id", g.id).eq("user_id", userId).eq("payment_status", "submitted");
+    const waiting = round2((waitingTx ?? []).reduce((s, x) => s + Number(x.amount) - Number(x.fee ?? 0), 0));
+    const remaining = round2(Number(g.goal_amount) - Number(g.saved_amount) - waiting);
+    if (remaining <= 0) throw new Error("Your earlier payment is still being checked. This goal will be complete once it is approved.");
     // Member pays the saving part + the owner's fee; only the saving part is credited to the goal.
     const { amount, fee, saving } = paymentFor(Number(g.daily_saving), Number(g.fee_per_day ?? 0), remaining);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Dialog baar-baar kholne pe naya order nahi banta: wahi pending (15 min ke andar) order dobara use hota hai.
     const { data: open } = await supabaseAdmin.from("transactions").select("provider_order_id")
       .eq("goal_id", g.id).eq("user_id", userId).eq("payment_status", "pending").eq("amount", amount)
