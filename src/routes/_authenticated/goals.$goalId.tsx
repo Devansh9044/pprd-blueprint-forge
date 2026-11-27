@@ -27,6 +27,7 @@ function GoalPage() {
   const nav = Route.useNavigate();
   const del = useServerFn(deleteGoal);
   const [deleting, setDeleting] = useState(false);
+  const [pausing, setPausing] = useState(false);
   const [open, setOpen] = useState(pay);
   const { data: goals, isLoading } = useQuery(goalsQuery);
   const { data: tx = [] } = useQuery(txQuery);
@@ -36,10 +37,15 @@ function GoalPage() {
   const saved = Number(g.saved_amount), total = Number(g.goal_amount);
   const pct = Math.min(100, (saved / total) * 100);
   const fee = Number(g.fee_per_day ?? 0);
-  const today = round2(Math.min(Number(g.daily_saving), round2(total - saved)) + fee);
+  const remaining = Math.max(0, round2(total - saved));
+  const today = round2(Math.min(Number(g.daily_saving), remaining) + fee);
   const togglePause = async () => {
-    const { error } = await supabase.from("saving_goals").update({ status: g.status === "paused" ? "active" : "paused" }).eq("id", g.id);
-    if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["goals"] });
+    if (pausing) return;
+    setPausing(true);
+    try {
+      const { error } = await supabase.from("saving_goals").update({ status: g.status === "paused" ? "active" : "paused" }).eq("id", g.id);
+      if (error) toast.error(error.message); else qc.invalidateQueries({ queryKey: ["goals"] });
+    } catch (e) { toast.error((e as Error).message); } finally { setPausing(false); }
   };
   const removeGoal = async () => {
     if (deleting) return;
@@ -53,7 +59,7 @@ function GoalPage() {
     } catch (e) { toast.error((e as Error).message); setDeleting(false); }
   };
   const rows = [
-    ["Daily saving", inr(Number(g.daily_saving))], ...(fee > 0 ? [["Service fee / day", inr(fee)]] : []), ["Remaining", inr(round2(total - saved))],
+    ["Daily saving", inr(Number(g.daily_saving))], ...(fee > 0 ? [["Service fee / day", inr(fee)]] : []), ["Remaining", inr(remaining)],
     ["Started", g.start_date], ["Target date", g.end_date ?? "—"], ["Status", g.status],
     ...((g.meta as Record<string, string>)?.["mobile_number"] ? [["Mobile", (g.meta as Record<string, string>)["mobile_number"]]] : []),
   ];
@@ -76,7 +82,7 @@ function GoalPage() {
         </div>
       )}
       {g.status === "active" && <Button onClick={() => setOpen(true)} className="mt-4 h-12 w-full rounded-xl text-base font-bold">{t("payToday")} · {inr(today)}</Button>}
-      {g.status !== "completed" && <Button variant="outline" onClick={togglePause} className="mt-2 w-full rounded-xl">{g.status === "paused" ? "Resume goal" : "Pause goal"}</Button>}
+      {g.status !== "completed" && <Button variant="outline" disabled={pausing} onClick={togglePause} className="mt-2 w-full rounded-xl">{g.status === "paused" ? "Resume goal" : "Pause goal"}</Button>}
       {g.status !== "completed" && saved === 0 && <Button variant="outline" disabled={deleting} onClick={removeGoal} className="mt-2 w-full rounded-xl text-destructive">Delete goal</Button>}
       <h2 className="mb-2 mt-6 text-lg font-bold text-accent">{t("history")}</h2>
       <div className="space-y-2">
