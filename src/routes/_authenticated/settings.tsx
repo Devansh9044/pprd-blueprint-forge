@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import { DeleteAccountPanel } from "@/components/mba/DeleteAccount";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings – MBA" }, { name: "description", content: "Language and profile settings." }] }),
@@ -48,6 +49,14 @@ function SettingsPage() {
         <Button onClick={save} className="w-full">{t("saveProfile")}</Button>
       </div>
       <Button variant="outline" onClick={out} className="mt-4 w-full">{t("signOut")}</Button>
+      <div className="mt-6 space-y-3 rounded-3xl bg-card p-5 shadow-card">
+        <div className="flex gap-4 text-sm font-semibold text-primary">
+          <a href="/privacy" className="underline">Privacy Policy</a>
+          <a href="/terms" className="underline">Terms &amp; Refund</a>
+        </div>
+        <p className="text-xs text-muted-foreground">Deleting your account removes your login and data. Money still saved in a goal must be settled first.</p>
+        <DeleteAccountPanel />
+      </div>
     </AppShell>
   );
 }
